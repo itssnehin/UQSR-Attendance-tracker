@@ -1,0 +1,13 @@
+fastapi
+uvicorn[standard]
+python-multipart
+sqlalchemy
+alembic
+pydantic
+python-dotenv
+pytest
+pytest-asyncio
+httpx
+qrcode[pil]
+python-jose[cryptography]
+pillow
