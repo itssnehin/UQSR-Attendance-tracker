@@ -9,6 +9,7 @@ import logging
 from typing import Dict, Any
 
 from .routes import calendar, registration, qr_code
+from .services.websocket_service import websocket_service
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -102,6 +103,16 @@ app.include_router(qr_code.router, prefix="/api/qr", tags=["qr-code"])
 # Import and include attendance override router
 from .routes import attendance_override
 app.include_router(attendance_override.router, prefix="/api/attendance/override", tags=["attendance-override"])
+
+# WebSocket status endpoint
+@app.get("/api/websocket/status")
+async def websocket_status() -> Dict[str, Any]:
+    """Get WebSocket connection status and statistics"""
+    return websocket_service.get_connection_stats()
+
+# Mount Socket.IO app
+socket_app = websocket_service.get_socketio_app()
+app.mount("/socket.io", socket_app)
 
 # Root endpoint
 @app.get("/")

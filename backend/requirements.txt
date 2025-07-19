@@ -11,3 +11,5 @@ httpx
 qrcode[pil]
 python-jose[cryptography]
 pillow
+python-socketio
+aiofiles

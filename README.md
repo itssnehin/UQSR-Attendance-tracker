@@ -1,6 +1,6 @@
 # Runner Attendance Tracker
 
-A web-based system designed for a university social runner's club to efficiently track attendance at daily social runs. The system provides a configurable calendar for scheduling runs, quick QR code-based registration for runners, and real-time attendance reporting through a web interface.
+A web-based system designed for the UQ Social Runners Club to efficiently track attendance at daily social runs. The system provides a configurable calendar for scheduling runs, quick QR code-based registration for runners, and real-time attendance reporting through a web interface.
 
 ## Features
 
