@@ -1,0 +1,162 @@
+.qr-code-display {
+  background-color: #ffffff;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.qr-code-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.qr-code-header h2 {
+  margin: 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.qr-code-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.qr-code-actions button {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.refresh-button {
+  background-color: #4a90e2;
+  color: white;
+}
+
+.refresh-button:hover {
+  background-color: #3a80d2;
+}
+
+.print-button {
+  background-color: #5cb85c;
+  color: white;
+}
+
+.print-button:hover {
+  background-color: #4caa4c;
+}
+
+.qr-code-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 300px;
+}
+
+.loading, .error, .no-run, .no-qr {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+  font-size: 1.1rem;
+}
+
+.error {
+  color: #d9534f;
+}
+
+.qr-code-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.qr-code-image-container {
+  padding: 20px;
+  background-color: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.qr-code-image {
+  width: 300px;
+  height: 300px;
+  max-width: 100%;
+}
+
+.qr-code-info {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.qr-code-info p {
+  margin: 8px 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.qr-code-instructions {
+  font-size: 1.1rem;
+  margin-top: 15px !important;
+  color: #555 !important;
+}
+
+.qr-code-footer {
+  text-align: center;
+  color: #777;
+  font-size: 0.9rem;
+  margin-top: 20px;
+  border-top: 1px solid #eee;
+  padding-top: 15px;
+}
+
+/* Print styles */
+@media print {
+  .qr-code-display {
+    box-shadow: none;
+    padding: 0;
+    margin: 0;
+  }
+  
+  .print-hide {
+    display: none !important;
+  }
+  
+  .qr-code-actions {
+    display: none;
+  }
+  
+  .qr-code-image {
+    width: 400px;
+    height: 400px;
+  }
+  
+  .qr-code-content {
+    page-break-inside: avoid;
+  }
+  
+  .qr-code-info {
+    margin-top: 30px;
+  }
+  
+  body * {
+    visibility: hidden;
+  }
+  
+  .qr-code-display, .qr-code-display * {
+    visibility: visible;
+  }
+  
+  .qr-code-display {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+  }
+}

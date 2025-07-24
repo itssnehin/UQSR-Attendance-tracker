@@ -1,2 +1,2 @@
 // Runner Registration component exports
-export { default as RunnerRegistration } from './RunnerRegistration';
+export { default } from './RunnerRegistration';

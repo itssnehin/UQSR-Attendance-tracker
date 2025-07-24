@@ -1,2 +1,2 @@
 // QR Display component exports
-export { default as QRDisplay } from './QRDisplay';
+export { default } from './QRDisplay';

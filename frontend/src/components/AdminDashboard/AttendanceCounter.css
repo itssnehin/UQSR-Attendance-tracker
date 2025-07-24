@@ -1,0 +1,91 @@
+.attendance-counter {
+  padding: 1.5rem;
+  border-radius: 8px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.counter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.counter-value {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: #2c3e50;
+  transition: transform 0.3s ease, color 0.3s ease;
+}
+
+.counter-value.animate {
+  transform: scale(1.2);
+  color: #27ae60;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.connection-status.connected {
+  background-color: rgba(46, 204, 113, 0.1);
+  color: #27ae60;
+}
+
+.connection-status.disconnected {
+  background-color: rgba(231, 76, 60, 0.1);
+  color: #e74c3c;
+}
+
+.status-dot {
+  display: inline-block;
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.connected .status-dot {
+  background-color: #27ae60;
+  box-shadow: 0 0 0 2px rgba(46, 204, 113, 0.3);
+}
+
+.disconnected .status-dot {
+  background-color: #e74c3c;
+  box-shadow: 0 0 0 2px rgba(231, 76, 60, 0.3);
+}
+
+.recent-attendees {
+  margin-top: 1rem;
+}
+
+.recent-attendees h3 {
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  color: #7f8c8d;
+}
+
+.attendee-item {
+  padding: 0.5rem;
+  margin-bottom: 0.5rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

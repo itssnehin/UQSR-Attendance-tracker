@@ -34,3 +34,33 @@ export interface Attendance {
   runnerName: string;
   registeredAt: Date;
 }
+
+// Additional interfaces for frontend state management
+export interface AppState {
+  isLoading: boolean;
+  error: string | null;
+  currentAttendance: number;
+  todayStatus: CalendarDay | null;
+  calendar: CalendarDay[];
+  isConnected: boolean;
+}
+
+export interface QRCodeData {
+  qrCode: string;
+  sessionId: string;
+  expiresAt: Date;
+}
+
+export interface AttendanceHistoryItem {
+  id: number;
+  runDate: string;
+  runnerName: string;
+  registeredAt: string;
+  sessionId: string;
+}
+
+export interface ExportOptions {
+  startDate?: string;
+  endDate?: string;
+  format: 'csv' | 'json';
+}
