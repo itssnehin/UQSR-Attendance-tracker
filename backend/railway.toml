@@ -10,7 +10,7 @@ restartPolicyMaxRetries = 10
 
 [variables]
 PYTHON_VERSION = "3.11"
-# DATABASE_URL will be automatically set by Railway PostgreSQL service
+DATABASE_URL = "sqlite:///./data/runner_attendance.db"
 ENVIRONMENT = "production"
 LOG_LEVEL = "INFO"
 DEBUG = "false"

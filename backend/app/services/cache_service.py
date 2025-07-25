@@ -411,7 +411,7 @@ def warm_cache():
             
             # Cache current calendar config
             today = datetime.now().date().isoformat()
-            calendar_config = calendar_service.get_calendar_config()
+            calendar_config = calendar_service.get_calendar_configuration()
             cache_service.set(CacheKeys.calendar_config(today), calendar_config, ttl=300)
             
             logger.info("Cache warmed with frequently accessed data")

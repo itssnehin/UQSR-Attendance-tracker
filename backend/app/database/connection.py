@@ -106,14 +106,46 @@ class ConnectionPool:
         """Get detailed connection statistics."""
         with self._lock:
             pool = self.engine.pool
-            return {
-                **self._connection_stats,
-                "pool_size": pool.size(),
-                "checked_in": pool.checkedin(),
-                "checked_out": pool.checkedout(),
-                "overflow": pool.overflow(),
-                "invalid": pool.invalid()
-            }
+            stats = {**self._connection_stats}
+            
+            # Handle different pool types
+            try:
+                if hasattr(pool, 'size'):
+                    stats["pool_size"] = pool.size()
+                else:
+                    stats["pool_size"] = "N/A (StaticPool)"
+                    
+                if hasattr(pool, 'checkedin'):
+                    stats["checked_in"] = pool.checkedin()
+                else:
+                    stats["checked_in"] = "N/A"
+                    
+                if hasattr(pool, 'checkedout'):
+                    stats["checked_out"] = pool.checkedout()
+                else:
+                    stats["checked_out"] = "N/A"
+                    
+                if hasattr(pool, 'overflow'):
+                    stats["overflow"] = pool.overflow()
+                else:
+                    stats["overflow"] = "N/A"
+                    
+                if hasattr(pool, 'invalid'):
+                    stats["invalid"] = pool.invalid()
+                else:
+                    stats["invalid"] = "N/A"
+                    
+            except Exception as e:
+                logger.warning(f"Error getting pool stats: {e}")
+                stats.update({
+                    "pool_size": "Error",
+                    "checked_in": "Error",
+                    "checked_out": "Error", 
+                    "overflow": "Error",
+                    "invalid": "Error"
+                })
+            
+            return stats
     
     def track_connection(self, connection_id: str, operation: str):
         """Track connection operations."""
