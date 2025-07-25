@@ -1,11 +1,15 @@
 """Database connection and session management."""
 
 import os
-from typing import Generator
+import threading
+import time
+from typing import Generator, Optional
+from contextlib import contextmanager
 from sqlalchemy import create_engine, event
 from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker, Session
-from sqlalchemy.pool import Pool
+from sqlalchemy.orm import sessionmaker, Session, scoped_session
+from sqlalchemy.pool import Pool, StaticPool, QueuePool
+from sqlalchemy.exc import DisconnectionError, OperationalError
 import logging
 
 logger = logging.getLogger(__name__)
@@ -16,22 +20,38 @@ DATABASE_URL = os.getenv(
     "sqlite:///./runner_attendance.db"
 )
 
-# Create engine with connection pooling
+# Ensure data directory exists for SQLite in production
 if DATABASE_URL.startswith("sqlite"):
-    # SQLite specific configuration
+    import pathlib
+    db_path = DATABASE_URL.replace("sqlite:///", "")
+    db_dir = pathlib.Path(db_path).parent
+    db_dir.mkdir(parents=True, exist_ok=True)
+
+# Enhanced engine configuration for concurrent access
+if DATABASE_URL.startswith("sqlite"):
+    # SQLite specific configuration optimized for concurrent access
     engine = create_engine(
         DATABASE_URL,
-        connect_args={"check_same_thread": False},
+        connect_args={
+            "check_same_thread": False,
+            "timeout": 30,  # 30 second timeout for busy database
+            "isolation_level": None  # Autocommit mode for better concurrency
+        },
+        poolclass=StaticPool,  # Use StaticPool for SQLite
+        pool_pre_ping=True,  # Verify connections before use
+        pool_recycle=3600,  # Recycle connections every hour
         echo=os.getenv("DB_ECHO", "false").lower() == "true"
     )
 else:
     # PostgreSQL configuration
     engine = create_engine(
         DATABASE_URL,
+        poolclass=QueuePool,
         pool_size=20,
-        max_overflow=0,
+        max_overflow=30,
         pool_pre_ping=True,
         pool_recycle=300,
+        pool_timeout=30,
         echo=os.getenv("DB_ECHO", "false").lower() == "true"
     )
 
@@ -51,56 +71,263 @@ def receive_checkin(dbapi_connection, connection_record):
     """Log connection checkin to pool."""
     logger.debug("Connection checked in to pool")
 
-# Create session factory
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
+# Create session factory with enhanced configuration
+SessionLocal = sessionmaker(
+    autocommit=False, 
+    autoflush=False, 
+    bind=engine,
+    expire_on_commit=False  # Keep objects accessible after commit
+)
+
+# Thread-safe scoped session for concurrent access
+ScopedSession = scoped_session(SessionLocal)
 
 # Base class for all models
 Base = declarative_base()
 
+
+class ConnectionPool:
+    """Enhanced connection pool management."""
+    
+    def __init__(self, engine):
+        self.engine = engine
+        self._lock = threading.Lock()
+        self._connection_count = 0
+        self._active_connections = {}
+        self._connection_stats = {
+            "total_created": 0,
+            "total_closed": 0,
+            "current_active": 0,
+            "peak_active": 0,
+            "errors": 0
+        }
+    
+    def get_connection_stats(self) -> dict:
+        """Get detailed connection statistics."""
+        with self._lock:
+            pool = self.engine.pool
+            return {
+                **self._connection_stats,
+                "pool_size": pool.size(),
+                "checked_in": pool.checkedin(),
+                "checked_out": pool.checkedout(),
+                "overflow": pool.overflow(),
+                "invalid": pool.invalid()
+            }
+    
+    def track_connection(self, connection_id: str, operation: str):
+        """Track connection operations."""
+        with self._lock:
+            if operation == "created":
+                self._connection_stats["total_created"] += 1
+                self._connection_stats["current_active"] += 1
+                self._active_connections[connection_id] = time.time()
+                
+                if self._connection_stats["current_active"] > self._connection_stats["peak_active"]:
+                    self._connection_stats["peak_active"] = self._connection_stats["current_active"]
+                    
+            elif operation == "closed":
+                self._connection_stats["total_closed"] += 1
+                self._connection_stats["current_active"] -= 1
+                self._active_connections.pop(connection_id, None)
+                
+            elif operation == "error":
+                self._connection_stats["errors"] += 1
+
+
 class DatabaseManager:
-    """Database connection and health management."""
+    """Enhanced database connection and health management."""
     
     def __init__(self):
         self.engine = engine
         self.SessionLocal = SessionLocal
+        self.ScopedSession = ScopedSession
+        self.connection_pool = ConnectionPool(engine)
+        self._session_registry = {}
+        self._lock = threading.Lock()
+        
+        # Initialize database optimizations
+        self._setup_optimizations()
+    
+    def _setup_optimizations(self):
+        """Setup database optimizations."""
+        try:
+            from .optimization import initialize_optimizer
+            self.optimizer = initialize_optimizer(self.engine)
+            logger.info("Database optimizer initialized")
+        except ImportError:
+            logger.warning("Database optimizer not available")
+            self.optimizer = None
     
     def get_session(self) -> Generator[Session, None, None]:
-        """Get database session with automatic cleanup."""
+        """Get database session with enhanced error handling and retry logic."""
+        session = None
+        retry_count = 0
+        max_retries = 3
+        
+        while retry_count < max_retries:
+            try:
+                session = self.SessionLocal()
+                
+                # Track session
+                session_id = id(session)
+                with self._lock:
+                    self._session_registry[session_id] = {
+                        "created_at": time.time(),
+                        "thread_id": threading.current_thread().ident
+                    }
+                
+                yield session
+                
+                # Successful completion
+                break
+                
+            except (DisconnectionError, OperationalError) as e:
+                retry_count += 1
+                logger.warning(f"Database connection error (attempt {retry_count}/{max_retries}): {e}")
+                
+                if session:
+                    session.rollback()
+                    session.close()
+                
+                if retry_count < max_retries:
+                    time.sleep(0.1 * retry_count)  # Exponential backoff
+                    continue
+                else:
+                    logger.error(f"Database connection failed after {max_retries} attempts")
+                    raise
+                    
+            except Exception as e:
+                if session:
+                    session.rollback()
+                logger.error(f"Database session error: {e}")
+                raise
+                
+            finally:
+                if session:
+                    session_id = id(session)
+                    with self._lock:
+                        self._session_registry.pop(session_id, None)
+                    session.close()
+    
+    def get_scoped_session(self) -> Session:
+        """Get thread-local scoped session for concurrent access."""
+        return self.ScopedSession()
+    
+    def remove_scoped_session(self):
+        """Remove thread-local scoped session."""
+        self.ScopedSession.remove()
+    
+    @contextmanager
+    def transaction(self):
+        """Context manager for database transactions with automatic rollback."""
         session = self.SessionLocal()
         try:
             yield session
+            session.commit()
         except Exception as e:
             session.rollback()
-            logger.error(f"Database session error: {e}")
+            logger.error(f"Transaction rolled back due to error: {e}")
+            raise
+        finally:
+            session.close()
+    
+    @contextmanager
+    def bulk_transaction(self):
+        """Context manager optimized for bulk operations."""
+        session = self.SessionLocal()
+        try:
+            # Disable autoflush for bulk operations
+            session.autoflush = False
+            yield session
+            session.commit()
+        except Exception as e:
+            session.rollback()
+            logger.error(f"Bulk transaction rolled back due to error: {e}")
             raise
         finally:
             session.close()
     
     def check_health(self) -> bool:
-        """Check database connection health."""
+        """Enhanced database connection health check."""
         try:
+            from sqlalchemy import text
             with self.engine.connect() as connection:
-                connection.execute("SELECT 1")
+                # Test basic connectivity
+                connection.execute(text("SELECT 1"))
+                
+                # Test write capability
+                connection.execute(text("CREATE TEMP TABLE health_check (id INTEGER)"))
+                connection.execute(text("INSERT INTO health_check (id) VALUES (1)"))
+                connection.execute(text("DROP TABLE health_check"))
+                
                 return True
         except Exception as e:
             logger.error(f"Database health check failed: {e}")
             return False
     
     def get_pool_status(self) -> dict:
-        """Get connection pool status."""
-        pool = self.engine.pool
-        return {
-            "size": pool.size(),
-            "checked_in": pool.checkedin(),
-            "checked_out": pool.checkedout(),
-            "overflow": pool.overflow(),
-            "invalid": pool.invalid()
-        }
+        """Get enhanced connection pool status."""
+        return self.connection_pool.get_connection_stats()
+    
+    def get_session_stats(self) -> dict:
+        """Get session statistics."""
+        with self._lock:
+            current_time = time.time()
+            active_sessions = len(self._session_registry)
+            long_running_sessions = sum(
+                1 for session_info in self._session_registry.values()
+                if current_time - session_info["created_at"] > 30  # Sessions older than 30 seconds
+            )
+            
+            return {
+                "active_sessions": active_sessions,
+                "long_running_sessions": long_running_sessions,
+                "session_details": list(self._session_registry.values())
+            }
+    
+    def cleanup_stale_sessions(self):
+        """Clean up stale database sessions."""
+        with self._lock:
+            current_time = time.time()
+            stale_sessions = [
+                session_id for session_id, session_info in self._session_registry.items()
+                if current_time - session_info["created_at"] > 300  # 5 minutes
+            ]
+            
+            for session_id in stale_sessions:
+                self._session_registry.pop(session_id, None)
+                logger.warning(f"Cleaned up stale session: {session_id}")
     
     def close_all_connections(self):
-        """Close all database connections."""
-        self.engine.dispose()
-        logger.info("All database connections closed")
+        """Close all database connections and clean up resources."""
+        try:
+            # Remove all scoped sessions
+            self.ScopedSession.remove()
+            
+            # Close engine connections
+            self.engine.dispose()
+            
+            # Clear session registry
+            with self._lock:
+                self._session_registry.clear()
+            
+            logger.info("All database connections closed and resources cleaned up")
+            
+        except Exception as e:
+            logger.error(f"Error closing database connections: {e}")
+    
+    def optimize_database(self):
+        """Run database optimization if optimizer is available."""
+        if self.optimizer:
+            try:
+                with self.transaction() as session:
+                    self.optimizer.optimize_database(session)
+                logger.info("Database optimization completed")
+            except Exception as e:
+                logger.error(f"Database optimization failed: {e}")
+        else:
+            logger.warning("Database optimizer not available")
 
 # Global database manager instance
 db_manager = DatabaseManager()

@@ -1,6 +1,29 @@
 {
+  "name": "runner-attendance-tracker",
+  "version": "1.0.0",
+  "description": "Runner Attendance Tracker - Complete testing suite",
+  "scripts": {
+    "test": "npm run test:backend && npm run test:frontend && npm run test:e2e",
+    "test:backend": "cd backend && python run_performance_tests.py --unit-only",
+    "test:frontend": "cd frontend && npm test -- --watchAll=false",
+    "test:e2e": "playwright test",
+    "test:load": "cd backend && python run_performance_tests.py --load-only",
+    "test:quick": "cd backend && python run_performance_tests.py --quick",
+    "test:full": "cd backend && python run_performance_tests.py",
+    "install:all": "npm install && cd frontend && npm install && cd ../backend && pip install -r requirements.txt",
+    "setup:playwright": "npx playwright install"
+  },
   "devDependencies": {
-    "@types/react": "^19.1.8",
-    "@types/react-dom": "^19.1.6"
-  }
+    "@playwright/test": "^1.40.0"
+  },
+  "keywords": [
+    "testing",
+    "attendance",
+    "tracker",
+    "playwright",
+    "locust",
+    "pytest"
+  ],
+  "author": "",
+  "license": "MIT"
 }

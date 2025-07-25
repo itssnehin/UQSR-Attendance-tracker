@@ -13,3 +13,7 @@ python-jose[cryptography]
 pillow
 python-socketio
 aiofiles
+slowapi
+redis
+locust
+psutil

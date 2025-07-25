@@ -10,7 +10,7 @@ import {
   formatDate,
   isSameDay
 } from '../../utils/dateUtils';
-import './Calendar.css';
+// import './Calendar.css'; // Temporarily disabled
 
 interface CalendarProps {
   onSave?: () => void;

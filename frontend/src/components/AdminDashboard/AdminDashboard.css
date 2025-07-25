@@ -39,6 +39,15 @@
   width: 100%;
 }
 
+.export-section {
+  margin-top: 2rem;
+  width: 100%;
+}
+
+.export-section .card {
+  padding: 0; /* DataExport component has its own padding */
+}
+
 @media (max-width: 768px) {
   .dashboard-grid {
     grid-template-columns: 1fr;

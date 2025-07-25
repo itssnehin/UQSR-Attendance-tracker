@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import apiService from '../../services/apiService';
 import { AttendanceHistoryItem } from '../../types';
-import './AttendanceHistory.css';
+// import './AttendanceHistory.css'; // Temporarily disabled
 
 interface AttendanceHistoryProps {
   daysToShow?: number;

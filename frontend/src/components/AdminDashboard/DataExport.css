@@ -1,0 +1,279 @@
+.data-export {
+  background: white;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+
+.data-export h3 {
+  margin: 0 0 20px 0;
+  color: #333;
+  font-size: 1.5rem;
+}
+
+.data-export h4 {
+  margin: 0 0 15px 0;
+  color: #555;
+  font-size: 1.1rem;
+}
+
+.export-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.date-range-section {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 15px;
+  background: #f9f9f9;
+}
+
+.date-inputs {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 15px;
+  flex-wrap: wrap;
+}
+
+.date-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 150px;
+}
+
+.date-input-group label {
+  font-weight: 500;
+  color: #555;
+  font-size: 0.9rem;
+}
+
+.date-input-group input {
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 0.9rem;
+}
+
+.date-input-group input:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.date-input-group input:disabled {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+}
+
+.quick-select-buttons {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.quick-select-btn {
+  padding: 6px 12px;
+  border: 1px solid #007bff;
+  background: white;
+  color: #007bff;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+}
+
+.quick-select-btn:hover:not(:disabled) {
+  background: #007bff;
+  color: white;
+}
+
+.quick-select-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.export-actions {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+.export-btn {
+  padding: 12px 24px;
+  background: #28a745;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.export-btn:hover:not(:disabled) {
+  background: #218838;
+}
+
+.export-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid transparent;
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.export-note {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+}
+
+.export-history {
+  margin-top: 30px;
+  border-top: 1px solid #e0e0e0;
+  padding-top: 20px;
+}
+
+.history-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.history-item {
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  padding: 12px;
+  background: white;
+  transition: border-color 0.2s ease;
+}
+
+.history-item.success {
+  border-left: 4px solid #28a745;
+}
+
+.history-item.error {
+  border-left: 4px solid #dc3545;
+}
+
+.history-item-main {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 5px;
+}
+
+.filename {
+  font-weight: 500;
+  color: #333;
+  flex: 1;
+  word-break: break-all;
+}
+
+.export-date {
+  font-size: 0.85rem;
+  color: #666;
+  white-space: nowrap;
+}
+
+.status-badge {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  font-weight: bold;
+  color: white;
+}
+
+.status-badge.success {
+  background: #28a745;
+}
+
+.status-badge.error {
+  background: #dc3545;
+}
+
+.date-range {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 5px;
+}
+
+.error-message {
+  font-size: 0.8rem;
+  color: #dc3545;
+  margin-top: 5px;
+  padding: 5px 8px;
+  background: #f8d7da;
+  border-radius: 4px;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .date-inputs {
+    flex-direction: column;
+  }
+  
+  .date-input-group {
+    min-width: unset;
+  }
+  
+  .quick-select-buttons {
+    justify-content: center;
+  }
+  
+  .history-item-main {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+  
+  .export-date {
+    white-space: normal;
+  }
+}
+
+@media (max-width: 480px) {
+  .data-export {
+    padding: 15px;
+  }
+  
+  .export-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .quick-select-buttons {
+    flex-direction: column;
+  }
+  
+  .quick-select-btn {
+    width: 100%;
+  }
+}

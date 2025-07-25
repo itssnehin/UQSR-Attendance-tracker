@@ -1,0 +1,19 @@
+[build]
+builder = "NIXPACKS"
+
+[deploy]
+startCommand = "uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1"
+healthcheckPath = "/health"
+healthcheckTimeout = 300
+restartPolicyType = "ON_FAILURE"
+restartPolicyMaxRetries = 10
+
+[variables]
+PYTHON_VERSION = "3.11"
+DATABASE_URL = "sqlite:///./data/runner_attendance.db"
+ENVIRONMENT = "production"
+LOG_LEVEL = "INFO"
+DEBUG = "false"
+QR_CODE_EXPIRY_HOURS = "24"
+CACHE_TTL = "300"
+MAX_CONCURRENT_REQUESTS = "100"

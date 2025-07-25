@@ -9,8 +9,8 @@ export interface RegistrationRequest {
 export interface AttendanceResponse {
   success: boolean;
   message: string;
-  currentCount: number;
-  runnerName?: string;
+  current_count: number;
+  runner_name?: string;
 }
 
 export interface CalendarDay {
@@ -63,4 +63,27 @@ export interface ExportOptions {
   startDate?: string;
   endDate?: string;
   format: 'csv' | 'json';
+}
+
+// Error handling types
+export interface ApiError extends Error {
+  status?: number;
+  code?: string;
+}
+
+export interface NetworkError extends Error {
+  name: 'NetworkError';
+}
+
+export interface AsyncState<T = any> {
+  data: T | null;
+  loading: boolean;
+  error: string | null;
+}
+
+export interface RetryOptions {
+  maxRetries?: number;
+  baseDelay?: number;
+  maxDelay?: number;
+  retryCondition?: (error: Error) => boolean;
 }

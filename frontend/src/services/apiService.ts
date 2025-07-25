@@ -1,7 +1,49 @@
 import { RegistrationRequest, AttendanceResponse, CalendarDay } from '../types';
 
+interface RetryOptions {
+  maxRetries?: number;
+  baseDelay?: number;
+  maxDelay?: number;
+  retryCondition?: (error: Error) => boolean;
+}
+
+interface RequestOptions extends RequestInit {
+  retry?: RetryOptions;
+}
+
+class ApiError extends Error {
+  constructor(
+    message: string,
+    public status?: number,
+    public code?: string
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
+class NetworkError extends Error {
+  constructor(message: string = 'Network connection failed') {
+    super(message);
+    this.name = 'NetworkError';
+  }
+}
+
 class ApiService {
   private readonly baseUrl: string;
+  private readonly defaultRetryOptions: RetryOptions = {
+    maxRetries: 3,
+    baseDelay: 1000,
+    maxDelay: 10000,
+    retryCondition: (error: Error) => {
+      // Retry on network errors and 5xx server errors
+      if (error instanceof NetworkError) return true;
+      if (error instanceof ApiError) {
+        return error.status ? error.status >= 500 : false;
+      }
+      return false;
+    }
+  };
 
   constructor() {
     // Use window.location.origin as fallback if environment variable is not available
@@ -10,30 +52,84 @@ class ApiService {
       : 'http://localhost:8000';
   }
 
+  private async sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  private calculateDelay(attempt: number, baseDelay: number, maxDelay: number): number {
+    // Exponential backoff with jitter
+    const exponentialDelay = baseDelay * Math.pow(2, attempt);
+    const jitter = Math.random() * 0.1 * exponentialDelay;
+    return Math.min(exponentialDelay + jitter, maxDelay);
+  }
+
   private async request<T>(
     endpoint: string,
-    options: RequestInit = {}
+    options: RequestOptions = {}
   ): Promise<T> {
+    const { retry, ...fetchOptions } = options;
+    const retryOptions = { ...this.defaultRetryOptions, ...retry };
     const url = `${this.baseUrl}${endpoint}`;
+    
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
-        ...options.headers,
+        ...fetchOptions.headers,
       },
-      ...options,
+      ...fetchOptions,
     };
 
-    try {
-      const response = await fetch(url, config);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
+    let lastError: Error = new Error('Unknown error');
 
-      return await response.json();
-    } catch (error) {
-      console.error('API request failed:', error);
-      throw error;
+    for (let attempt = 0; attempt <= retryOptions.maxRetries!; attempt++) {
+      try {
+        const response = await fetch(url, config);
+        
+        if (!response.ok) {
+          const errorMessage = await this.getErrorMessage(response);
+          throw new ApiError(
+            errorMessage || `HTTP error! status: ${response.status}`,
+            response.status,
+            response.status.toString()
+          );
+        }
+
+        return await response.json();
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Unknown error');
+        
+        // Convert fetch errors to NetworkError
+        if (lastError.name === 'TypeError' && lastError.message.includes('fetch')) {
+          lastError = new NetworkError('Network connection failed');
+        }
+
+        // Don't retry on the last attempt or if retry condition is not met
+        if (attempt === retryOptions.maxRetries || !retryOptions.retryCondition!(lastError)) {
+          break;
+        }
+
+        // Calculate delay and wait before retry
+        const delay = this.calculateDelay(attempt, retryOptions.baseDelay!, retryOptions.maxDelay!);
+        console.warn(`API request failed (attempt ${attempt + 1}/${retryOptions.maxRetries! + 1}), retrying in ${delay}ms:`, lastError.message);
+        await this.sleep(delay);
+      }
+    }
+
+    console.error('API request failed after all retries:', lastError);
+    throw lastError;
+  }
+
+  private async getErrorMessage(response: Response): Promise<string> {
+    try {
+      const contentType = response.headers.get('content-type');
+      if (contentType && contentType.includes('application/json')) {
+        const errorData = await response.json();
+        return errorData.message || errorData.detail || 'Request failed';
+      } else {
+        return await response.text() || `HTTP ${response.status} error`;
+      }
+    } catch {
+      return `HTTP ${response.status} error`;
     }
   }
 
@@ -94,13 +190,48 @@ class ApiService {
     if (endDate) params.append('end_date', endDate);
     
     const query = params.toString() ? `?${params.toString()}` : '';
-    const response = await fetch(`${this.baseUrl}/api/attendance/export${query}`);
+    const url = `${this.baseUrl}/api/attendance/export${query}`;
     
-    if (!response.ok) {
-      throw new Error(`Export failed! status: ${response.status}`);
+    // Use custom fetch for blob response with retry logic
+    const retryOptions = { ...this.defaultRetryOptions };
+    let lastError: Error = new Error('Unknown error');
+
+    for (let attempt = 0; attempt <= retryOptions.maxRetries!; attempt++) {
+      try {
+        const response = await fetch(url);
+        
+        if (!response.ok) {
+          const errorMessage = await this.getErrorMessage(response);
+          throw new ApiError(
+            errorMessage || `Export failed! status: ${response.status}`,
+            response.status,
+            response.status.toString()
+          );
+        }
+        
+        return response.blob();
+      } catch (error) {
+        lastError = error instanceof Error ? error : new Error('Unknown error');
+        
+        // Convert fetch errors to NetworkError
+        if (lastError.name === 'TypeError' && lastError.message.includes('fetch')) {
+          lastError = new NetworkError('Network connection failed');
+        }
+
+        // Don't retry on the last attempt or if retry condition is not met
+        if (attempt === retryOptions.maxRetries || !retryOptions.retryCondition!(lastError)) {
+          break;
+        }
+
+        // Calculate delay and wait before retry
+        const delay = this.calculateDelay(attempt, retryOptions.baseDelay!, retryOptions.maxDelay!);
+        console.warn(`Export request failed (attempt ${attempt + 1}/${retryOptions.maxRetries! + 1}), retrying in ${delay}ms:`, lastError.message);
+        await this.sleep(delay);
+      }
     }
-    
-    return response.blob();
+
+    console.error('Export request failed after all retries:', lastError);
+    throw lastError;
   }
 }
 

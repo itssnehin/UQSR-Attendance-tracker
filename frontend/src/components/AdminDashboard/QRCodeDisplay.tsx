@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import apiService from '../../services/apiService';
 import { useAppContext } from '../../context';
-import './QRCodeDisplay.css';
+// import './QRCodeDisplay.css'; // Temporarily disabled
 
 interface QRCodeDisplayProps {
   refreshInterval?: number; // in milliseconds, default 5 minutes

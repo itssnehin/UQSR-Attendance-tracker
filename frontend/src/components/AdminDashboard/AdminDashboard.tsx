@@ -4,8 +4,9 @@ import Calendar from './Calendar';
 import AttendanceCounter from './AttendanceCounter';
 import AttendanceHistory from './AttendanceHistory';
 import QRCodeDisplay from './QRCodeDisplay';
+import DataExport from './DataExport';
 import apiService from '../../services/apiService';
-import './AdminDashboard.css';
+// import './AdminDashboard.css'; // Temporarily disabled
 
 const AdminDashboard: React.FC = () => {
   const { state, updateAttendance, setError } = useAppContext();
@@ -51,6 +52,12 @@ const AdminDashboard: React.FC = () => {
       
       <div className="qr-code-section">
         <QRCodeDisplay refreshInterval={300000} />
+      </div>
+
+      <div className="export-section">
+        <div className="card">
+          <DataExport />
+        </div>
       </div>
 
       {state.error && (

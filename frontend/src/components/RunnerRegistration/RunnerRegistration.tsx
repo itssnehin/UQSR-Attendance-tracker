@@ -4,7 +4,7 @@ import { useAppContext } from '../../context';
 import { validateRunnerName, validateSessionId, sanitizeInput } from '../../utils/validationUtils';
 import apiService from '../../services/apiService';
 import { RegistrationRequest, AttendanceResponse } from '../../types';
-import './RunnerRegistration.css';
+// import './RunnerRegistration.css'; // Temporarily disabled
 
 interface FormData {
   runnerName: string;
@@ -132,7 +132,7 @@ const RunnerRegistration: React.FC = () => {
         isSubmitting: false,
         isSuccess: response.success,
         message: response.message,
-        currentCount: response.currentCount
+        currentCount: response.current_count
       });
 
       if (response.success) {

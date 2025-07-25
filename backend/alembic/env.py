@@ -33,7 +33,17 @@ target_metadata = Base.metadata
 
 def get_url():
     """Get database URL from environment or config."""
-    return os.getenv("DATABASE_URL", config.get_main_option("sqlalchemy.url"))
+    url = os.getenv("DATABASE_URL", config.get_main_option("sqlalchemy.url"))
+    
+    # Ensure data directory exists for SQLite in production
+    if url.startswith("sqlite"):
+        import pathlib
+        db_path = url.replace("sqlite:///", "")
+        db_dir = pathlib.Path(db_path).parent
+        db_dir.mkdir(parents=True, exist_ok=True)
+        print(f"Database directory ensured: {db_dir}")
+    
+    return url
 
 def run_migrations_offline() -> None:
     """Run migrations in 'offline' mode.
