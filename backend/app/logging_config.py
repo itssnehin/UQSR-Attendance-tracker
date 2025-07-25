@@ -222,6 +222,16 @@ def log_performance_metric(metric_name: str, metric_value: float, metadata: Dict
         import json
         
         with db_manager.transaction() as session:
+            # Check if performance_metrics table exists
+            result = session.execute(text("""
+                SELECT name FROM sqlite_master 
+                WHERE type='table' AND name='performance_metrics'
+            """)).fetchone()
+            
+            if not result:
+                # Table doesn't exist, skip logging (migrations haven't run yet)
+                return
+                
             session.execute(text("""
                 INSERT INTO performance_metrics (metric_name, metric_value, recorded_at, metadata)
                 VALUES (:metric_name, :metric_value, :recorded_at, :metadata)
