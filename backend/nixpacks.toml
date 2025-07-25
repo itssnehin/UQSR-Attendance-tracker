@@ -1,29 +1,14 @@
 [phases.setup]
 nixPkgs = [
   "python311",
-  "python311Packages.fastapi",
-  "python311Packages.uvicorn",
-  "python311Packages.python-multipart",
-  "python311Packages.sqlalchemy",
-  "python311Packages.alembic",
-  "python311Packages.pydantic",
-  "python311Packages.python-dotenv",
-  "python311Packages.pytest",
-  "python311Packages.pytest-asyncio",
-  "python311Packages.httpx",
-  "python311Packages.qrcode",
-  "python311Packages.python-jose",
-  "python311Packages.pillow",
-  "python311Packages.python-socketio",
-  "python311Packages.aiofiles",
-  "python311Packages.slowapi",
-  "python311Packages.redis",
-  "python311Packages.psutil"
+  "python311Packages.pip",
+  "python311Packages.setuptools",
+  "python311Packages.wheel"
 ]
 
 [phases.install]
 cmds = [
-  "echo 'Using Nix packages instead of pip'"
+  "pip install --no-cache-dir -r requirements.txt"
 ]
 
 [phases.build]
