@@ -213,3 +213,4 @@ backend/alembic/versions/*.py
 # Build outputs
 build/
 dist/
+.vercel
