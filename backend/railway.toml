@@ -2,7 +2,7 @@
 builder = "NIXPACKS"
 
 [deploy]
-startCommand = "python -m uvicorn app.main:app --host 0.0.0.0 --port $PORT --workers 1"
+startCommand = "python start_production.py"
 healthcheckPath = "/health"
 healthcheckTimeout = 300
 restartPolicyType = "ON_FAILURE"
@@ -10,7 +10,7 @@ restartPolicyMaxRetries = 10
 
 [variables]
 PYTHON_VERSION = "3.11"
-DATABASE_URL = "sqlite:///./data/runner_attendance.db"
+# DATABASE_URL will be automatically set by Railway PostgreSQL service
 ENVIRONMENT = "production"
 LOG_LEVEL = "INFO"
 DEBUG = "false"
