@@ -49,8 +49,33 @@ interface AppProviderProps {
 const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
   const [state, dispatch] = useReducer(appReducer, initialState);
 
-  // Initialize socket connection
+  // Initialize socket connection and load initial data
   useEffect(() => {
+    const initializeApp = async () => {
+      try {
+        // Import apiService dynamically to avoid circular dependency
+        const { default: apiService } = await import('../services/apiService');
+        
+        // Load initial attendance count
+        const todayData = await apiService.getTodayAttendance();
+        dispatch({ type: 'UPDATE_ATTENDANCE', payload: todayData.count });
+        
+        // Load calendar data
+        const calendarData = await apiService.getCalendar();
+        dispatch({ type: 'SET_CALENDAR', payload: calendarData });
+        
+        // Find today's status
+        const today = new Date().toISOString().split('T')[0];
+        const todayStatus = calendarData.find(day => day.date === today);
+        dispatch({ type: 'SET_TODAY_STATUS', payload: todayStatus || null });
+        
+      } catch (error) {
+        console.error('Failed to initialize app data:', error);
+        dispatch({ type: 'SET_ERROR', payload: 'Failed to load initial data' });
+      }
+    };
+
+    initializeApp();
     socketService.connect();
 
     // Set up socket event listeners

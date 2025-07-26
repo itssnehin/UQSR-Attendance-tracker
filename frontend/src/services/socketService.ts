@@ -12,12 +12,14 @@ class SocketService {
   connect(): void {
     if (!this.socket) {
       this.socket = io(this.baseUrl, {
+        path: '/socket.io', // Explicitly set the path
         transports: ['websocket', 'polling'], // Add polling as fallback
         autoConnect: true,
         timeout: 10000, // 10 second timeout
         reconnection: true,
         reconnectionAttempts: 5,
         reconnectionDelay: 2000,
+        forceNew: true, // Force new connection
       });
 
       this.socket.on('connect', () => {

@@ -130,7 +130,23 @@ class ApiService {
 
   // Calendar endpoints
   async getCalendar(): Promise<CalendarDay[]> {
-    return this.request<CalendarDay[]>('/api/calendar');
+    const response = await this.request<{
+      success: boolean;
+      data: Array<{
+        date: string;
+        has_run: boolean;
+        attendance_count: number;
+        session_id: string;
+      }>;
+    }>('/api/calendar');
+    
+    // Transform backend response to frontend format
+    return response.data.map(item => ({
+      date: item.date,
+      hasRun: item.has_run,
+      attendanceCount: item.attendance_count,
+      sessionId: item.session_id
+    }));
   }
 
   async configureCalendar(day: CalendarDay): Promise<void> {
@@ -183,7 +199,19 @@ class ApiService {
   }
 
   async getTodayAttendance(): Promise<{ count: number; attendees: string[] }> {
-    return this.request<{ count: number; attendees: string[] }>('/api/attendance/today');
+    const response = await this.request<{
+      success: boolean;
+      count: number;
+      has_run_today: boolean;
+      session_id: string;
+      message: string;
+    }>('/api/attendance/today');
+    
+    // Transform backend response to frontend format
+    return {
+      count: response.count,
+      attendees: [] // Backend doesn't return attendee names in this endpoint
+    };
   }
 
   async getAttendanceHistory(startDate?: string, endDate?: string): Promise<any[]> {
@@ -192,7 +220,29 @@ class ApiService {
     if (endDate) params.append('end_date', endDate);
     
     const query = params.toString() ? `?${params.toString()}` : '';
-    return this.request<any[]>(`/api/attendance/history${query}`);
+    const response = await this.request<{
+      success: boolean;
+      data: Array<{
+        id: number;
+        runner_name: string;
+        registered_at: string;
+        run_date: string;
+        session_id: string;
+      }>;
+      total_count: number;
+      page: number;
+      page_size: number;
+      total_pages: number;
+    }>(`/api/attendance/history${query}`);
+    
+    // Transform backend response to frontend format
+    return response.data.map(item => ({
+      id: item.id,
+      runnerName: item.runner_name,
+      registeredAt: item.registered_at,
+      runDate: item.run_date,
+      sessionId: item.session_id
+    }));
   }
 
   // QR Code endpoints
