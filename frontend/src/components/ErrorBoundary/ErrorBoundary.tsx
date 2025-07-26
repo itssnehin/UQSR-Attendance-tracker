@@ -1,5 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from 'react';
-import './ErrorBoundary.css';
+// import './ErrorBoundary.css'; // Temporarily disabled
 
 interface Props {
   children: ReactNode;

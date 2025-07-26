@@ -1,5 +1,5 @@
 import React from 'react';
-import './ErrorMessage.css';
+// import './ErrorMessage.css'; // Temporarily disabled
 
 interface ErrorMessageProps {
   error: string | Error | null;
