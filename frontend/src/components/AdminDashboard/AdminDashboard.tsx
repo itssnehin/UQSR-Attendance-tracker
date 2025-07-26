@@ -1,4 +1,5 @@
 import React from 'react';
+import AttendanceCode from './AttendanceCode';
 
 const AdminDashboard: React.FC = () => {
   return (
@@ -17,14 +18,11 @@ const AdminDashboard: React.FC = () => {
       </h1>
       
       <div style={{
-        backgroundColor: 'white',
-        borderRadius: '8px',
-        padding: '2rem',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        textAlign: 'center'
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+        gap: '2rem'
       }}>
-        <p>Admin Dashboard is loading...</p>
-        <p>This is a minimal version to test if the basic component works.</p>
+        <AttendanceCode />
       </div>
     </div>
   );
