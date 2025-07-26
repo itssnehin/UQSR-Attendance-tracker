@@ -35,19 +35,61 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({
     }
   };
 
+  const variantStyles = {
+    error: {
+      backgroundColor: '#f8d7da',
+      color: '#721c24',
+      borderColor: '#f5c6cb'
+    },
+    warning: {
+      backgroundColor: '#fff3cd',
+      color: '#856404',
+      borderColor: '#ffeaa7'
+    },
+    info: {
+      backgroundColor: '#d1ecf1',
+      color: '#0c5460',
+      borderColor: '#bee5eb'
+    }
+  };
+
   return (
-    <div className={`error-message ${variant} ${className}`}>
-      <div className="error-content">
-        <span className="error-icon">{getIcon()}</span>
-        <span className="error-text">{errorMessage}</span>
+    <div style={{
+      ...variantStyles[variant],
+      padding: '0.75rem',
+      borderRadius: '4px',
+      border: `1px solid ${variantStyles[variant].borderColor}`,
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      margin: '0.5rem 0'
+    }} className={className}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '0.5rem'
+      }}>
+        <span>{getIcon()}</span>
+        <span>{errorMessage}</span>
       </div>
       
-      <div className="error-actions">
+      <div style={{
+        display: 'flex',
+        gap: '0.5rem'
+      }}>
         {showRetry && onRetry && (
           <button 
             onClick={onRetry}
-            className="error-action-button retry-button"
             type="button"
+            style={{
+              backgroundColor: '#f39c12',
+              color: 'white',
+              border: 'none',
+              borderRadius: '3px',
+              padding: '0.25rem 0.5rem',
+              cursor: 'pointer',
+              fontSize: '0.8rem'
+            }}
           >
             Retry
           </button>
@@ -55,9 +97,16 @@ const ErrorMessage: React.FC<ErrorMessageProps> = ({
         {showDismiss && onDismiss && (
           <button 
             onClick={onDismiss}
-            className="error-action-button dismiss-button"
             type="button"
             aria-label="Dismiss error"
+            style={{
+              backgroundColor: 'transparent',
+              color: 'inherit',
+              border: 'none',
+              cursor: 'pointer',
+              fontSize: '1.2rem',
+              padding: '0 0.25rem'
+            }}
           >
             ×
           </button>

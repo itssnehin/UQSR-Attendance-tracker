@@ -69,33 +69,91 @@ class ErrorBoundary extends Component<Props, State> {
 
       // Default error UI
       return (
-        <div className="error-boundary">
-          <div className="error-boundary-content">
-            <div className="error-icon">⚠️</div>
-            <h2>Something went wrong</h2>
-            <p className="error-message">
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          minHeight: '400px',
+          padding: '2rem',
+          backgroundColor: '#f8f9fa'
+        }}>
+          <div style={{
+            backgroundColor: 'white',
+            borderRadius: '8px',
+            padding: '2rem',
+            boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
+            textAlign: 'center',
+            maxWidth: '500px'
+          }}>
+            <div style={{
+              fontSize: '3rem',
+              marginBottom: '1rem'
+            }}>⚠️</div>
+            <h2 style={{
+              color: '#e74c3c',
+              marginBottom: '1rem'
+            }}>Something went wrong</h2>
+            <p style={{
+              color: '#6c757d',
+              marginBottom: '2rem',
+              lineHeight: '1.5'
+            }}>
               We're sorry, but something unexpected happened. Please try refreshing the page.
             </p>
             
-            <div className="error-actions">
+            <div style={{
+              display: 'flex',
+              gap: '1rem',
+              justifyContent: 'center'
+            }}>
               <button 
                 onClick={this.handleRetry}
-                className="retry-button"
+                style={{
+                  backgroundColor: '#3498db',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '0.75rem 1.5rem',
+                  cursor: 'pointer',
+                  fontSize: '1rem'
+                }}
               >
                 Try Again
               </button>
               <button 
                 onClick={() => window.location.reload()}
-                className="refresh-button"
+                style={{
+                  backgroundColor: '#27ae60',
+                  color: 'white',
+                  border: 'none',
+                  borderRadius: '4px',
+                  padding: '0.75rem 1.5rem',
+                  cursor: 'pointer',
+                  fontSize: '1rem'
+                }}
               >
                 Refresh Page
               </button>
             </div>
 
             {process.env.NODE_ENV === 'development' && this.state.error && (
-              <details className="error-details">
-                <summary>Error Details (Development Only)</summary>
-                <pre className="error-stack">
+              <details style={{
+                marginTop: '2rem',
+                textAlign: 'left',
+                backgroundColor: '#f8f9fa',
+                padding: '1rem',
+                borderRadius: '4px'
+              }}>
+                <summary style={{ cursor: 'pointer', fontWeight: 'bold' }}>
+                  Error Details (Development Only)
+                </summary>
+                <pre style={{
+                  marginTop: '1rem',
+                  fontSize: '0.8rem',
+                  color: '#e74c3c',
+                  whiteSpace: 'pre-wrap',
+                  wordBreak: 'break-word'
+                }}>
                   {this.state.error.toString()}
                   {this.state.errorInfo?.componentStack}
                 </pre>

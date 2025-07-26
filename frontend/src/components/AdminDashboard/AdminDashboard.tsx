@@ -3,10 +3,9 @@ import { useAppContext } from '../../context/AppContext';
 import Calendar from './Calendar';
 import AttendanceCounter from './AttendanceCounter';
 import AttendanceHistory from './AttendanceHistory';
-import QRCodeDisplay from './QRCodeDisplay';
+import AttendanceCode from './AttendanceCode';
 import DataExport from './DataExport';
 import apiService from '../../services/apiService';
-// import './AdminDashboard.css'; // Temporarily disabled
 
 const AdminDashboard: React.FC = () => {
   const { state, updateAttendance, setError } = useAppContext();
@@ -29,37 +28,43 @@ const AdminDashboard: React.FC = () => {
 
 
   return (
-    <div className="container">
-      <h1>Admin Dashboard</h1>
+    <div style={{
+      maxWidth: '1200px',
+      margin: '0 auto',
+      padding: '2rem'
+    }}>
+      <h1 style={{
+        color: '#2c3e50',
+        textAlign: 'center',
+        marginBottom: '2rem',
+        fontSize: '2.5rem'
+      }}>
+        📊 Admin Dashboard
+      </h1>
       
-      <div className="dashboard-grid">
-        <div className="dashboard-column">
-          <AttendanceCounter />
-          <AttendanceHistory daysToShow={7} />
-        </div>
-        
-        <div className="dashboard-column">
-          <div className="card">
-            <h2>Run Calendar Configuration</h2>
-            <p>Click on dates to mark them as run days. Changes will be saved when you click "Save Changes".</p>
-            <Calendar />
-          </div>
-        </div>
-      </div>
-      
-      <div className="qr-code-section">
-        <QRCodeDisplay refreshInterval={300000} />
-      </div>
-
-      <div className="export-section">
-        <div className="card">
-          <DataExport />
-        </div>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
+        gap: '2rem'
+      }}>
+        <AttendanceCode />
+        <AttendanceCounter />
+        <Calendar />
+        <AttendanceHistory daysToShow={7} />
+        <DataExport />
       </div>
 
       {state.error && (
-        <div className="card error-card">
-          <div className="error">Error: {state.error}</div>
+        <div style={{
+          backgroundColor: '#f8d7da',
+          color: '#721c24',
+          padding: '1rem',
+          borderRadius: '4px',
+          border: '1px solid #f5c6cb',
+          marginTop: '2rem',
+          textAlign: 'center'
+        }}>
+          Error: {state.error}
         </div>
       )}
     </div>
