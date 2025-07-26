@@ -30,6 +30,21 @@ const Navigation: React.FC = () => {
         </h1>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <Link
+            to="/home"
+            style={{
+              color: 'white',
+              textDecoration: 'none',
+              padding: '0.5rem 1rem',
+              borderRadius: '4px',
+              backgroundColor: '#7f8c8d',
+              transition: 'background-color 0.2s'
+            }}
+            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#95a5a6'}
+            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#7f8c8d'}
+          >
+            🏠 Home
+          </Link>
+          <Link
             to="/admin"
             style={{
               color: 'white',
@@ -43,21 +58,6 @@ const Navigation: React.FC = () => {
             onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#34495e'}
           >
             📊 Admin Dashboard
-          </Link>
-          <Link
-            to="/register"
-            style={{
-              color: 'white',
-              textDecoration: 'none',
-              padding: '0.5rem 1rem',
-              borderRadius: '4px',
-              backgroundColor: '#27ae60',
-              transition: 'background-color 0.2s'
-            }}
-            onMouseOver={(e) => e.currentTarget.style.backgroundColor = '#2ecc71'}
-            onMouseOut={(e) => e.currentTarget.style.backgroundColor = '#27ae60'}
-          >
-            ✅ Register Attendance
           </Link>
         </div>
       </div>
@@ -182,7 +182,8 @@ const App: React.FC = () => {
         <ErrorBoundary>
           <Navigation />
           <Routes>
-            <Route path="/" element={<HomePage />} />
+            <Route path="/" element={<RunnerRegistration />} />
+            <Route path="/home" element={<HomePage />} />
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/register" element={<RunnerRegistration />} />
             <Route path="/register/:sessionId" element={<RunnerRegistration />} />
