@@ -138,15 +138,41 @@ class ApiService {
     return this.request<CalendarDay[]>('/api/calendar');
   }
 
-  async configureCalendar(days: CalendarDay[]): Promise<void> {
+  async configureCalendar(day: CalendarDay): Promise<void> {
     return this.request<void>('/api/calendar/configure', {
       method: 'POST',
-      body: JSON.stringify(days),
+      body: JSON.stringify({
+        date: day.date,
+        has_run: day.hasRun
+      }),
     });
   }
 
-  async getTodayStatus(): Promise<CalendarDay> {
-    return this.request<CalendarDay>('/api/calendar/today');
+  async configureRunDay(date: Date, hasRun: boolean): Promise<void> {
+    const dateString = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    return this.request<void>('/api/calendar/configure', {
+      method: 'POST',
+      body: JSON.stringify({
+        date: dateString,
+        has_run: hasRun
+      }),
+    });
+  }
+
+  async getTodayStatus(): Promise<{
+    success: boolean;
+    has_run_today: boolean;
+    session_id: string | null;
+    attendance_count: number;
+    message: string;
+  }> {
+    return this.request<{
+      success: boolean;
+      has_run_today: boolean;
+      session_id: string | null;
+      attendance_count: number;
+      message: string;
+    }>('/api/calendar/today');
   }
 
   // Registration endpoints

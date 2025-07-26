@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CalendarDay } from '../../types/index';
 import { useAppContext } from '../../context/AppContext';
 import apiService from '../../services/apiService';
@@ -21,8 +21,7 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
   const { state, setLoading, setError, setCalendar } = useAppContext();
   const [currentDate, setCurrentDate] = useState(initialMonth || new Date());
   const [localCalendar, setLocalCalendar] = useState<CalendarDay[]>([]);
-  const [hasChanges, setHasChanges] = useState(false);
-  const [isSaving, setIsSaving] = useState(false);
+
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   const currentYear = currentDate.getFullYear();
@@ -54,62 +53,52 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
     }
   };
 
-  const toggleRunDay = (date: Date) => {
+  const toggleRunDay = async (date: Date) => {
     setSelectedDate(date);
     const dateString = getDateString(date);
     const existingDay = localCalendar.find(day => day.date === dateString);
 
+    let updatedDay: CalendarDay;
     let updatedCalendar: CalendarDay[];
 
     if (existingDay) {
       // Toggle existing day
+      updatedDay = { ...existingDay, hasRun: !existingDay.hasRun };
       updatedCalendar = localCalendar.map(day =>
-        day.date === dateString
-          ? { ...day, hasRun: !day.hasRun }
-          : day
+        day.date === dateString ? updatedDay : day
       );
     } else {
       // Add new day
-      const newDay: CalendarDay = {
+      updatedDay = {
         date: dateString,
         hasRun: true,
         attendanceCount: 0
       };
-      updatedCalendar = [...localCalendar, newDay];
+      updatedCalendar = [...localCalendar, updatedDay];
     }
 
+    // Update local state immediately
     setLocalCalendar(updatedCalendar);
-    setHasChanges(true);
-  };
 
-  const handleDateSelection = useCallback((date: Date) => {
-    setSelectedDate(date);
-  }, []);
-
-  const saveChanges = async () => {
+    // Save to backend immediately - send single day configuration
     try {
-      setIsSaving(true);
+      setLoading(true);
+      await apiService.configureRunDay(date, updatedDay.hasRun);
+      setCalendar(updatedCalendar); // Update global state
       setError(null);
-
-      await apiService.configureCalendar(localCalendar);
-      setCalendar(localCalendar);
-      setHasChanges(false);
-
-      if (onSave) {
-        onSave();
-      }
     } catch (error) {
       setError('Failed to save calendar changes');
       console.error('Error saving calendar:', error);
+      // Revert local changes on error
+      setLocalCalendar(state.calendar);
     } finally {
-      setIsSaving(false);
+      setLoading(false);
     }
   };
 
-  const resetChanges = () => {
-    setLocalCalendar(state.calendar);
-    setHasChanges(false);
-  };
+
+
+
 
   const navigateMonth = (direction: 'prev' | 'next') => {
     const newDate = new Date(currentDate);
@@ -131,7 +120,12 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
 
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDayOfMonth; i++) {
-      days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
+      days.push(
+        <div key={`empty-${i}`} style={{
+          padding: '0.75rem',
+          minHeight: '40px'
+        }}></div>
+      );
     }
 
     // Add days of the month
@@ -142,10 +136,27 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
       const isTodayDate = isToday(date);
       const isSelected = selectedDate && isSameDay(date, selectedDate);
 
+      let backgroundColor = '#ffffff';
+      let color = '#495057';
+      let border = '1px solid #dee2e6';
+
+      if (isRunDay) {
+        backgroundColor = '#d4edda';
+        border = '2px solid #27ae60';
+        color = '#155724';
+      }
+      if (isTodayDate) {
+        backgroundColor = isRunDay ? '#c3e6cb' : '#f8d7da';
+        border = '2px solid #e74c3c';
+        color = isRunDay ? '#155724' : '#721c24';
+      }
+      if (isSelected) {
+        border = '2px solid #007bff';
+      }
+
       days.push(
         <div
           key={day}
-          className={`calendar-day ${isRunDay ? 'run-day' : ''} ${isTodayDate ? 'today' : ''} ${isSelected ? 'selected' : ''}`}
           onClick={() => toggleRunDay(date)}
           title={`${formatDate(date)}${isRunDay ? ' - Run Day' : ''}`}
           aria-label={`${formatDate(date)}${isRunDay ? ' - Run Day' : ''}${isTodayDate ? ' (Today)' : ''}`}
@@ -158,11 +169,52 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
               toggleRunDay(date);
             }
           }}
+          style={{
+            padding: '0.75rem',
+            minHeight: '40px',
+            backgroundColor,
+            color,
+            border,
+            borderRadius: '4px',
+            cursor: 'pointer',
+            textAlign: 'center',
+            position: 'relative',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '0.9rem',
+            fontWeight: isRunDay || isTodayDate ? 'bold' : 'normal',
+            transition: 'all 0.2s ease'
+          }}
+          onMouseOver={(e) => {
+            if (!state.isLoading) {
+              e.currentTarget.style.transform = 'scale(1.05)';
+              e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+            }
+          }}
+          onMouseOut={(e) => {
+            e.currentTarget.style.transform = 'scale(1)';
+            e.currentTarget.style.boxShadow = 'none';
+          }}
         >
-          <span className="day-number">{day}</span>
-          {isRunDay && <span className="run-indicator" aria-hidden="true">🏃</span>}
+          <span>{day}</span>
+          {isRunDay && <span style={{ fontSize: '0.7rem' }} aria-hidden="true">🏃</span>}
           {dayData?.attendanceCount !== undefined && dayData.attendanceCount > 0 && (
-            <span className="attendance-count" title={`${dayData.attendanceCount} attendees`}>
+            <span style={{
+              position: 'absolute',
+              top: '2px',
+              right: '2px',
+              backgroundColor: '#007bff',
+              color: 'white',
+              borderRadius: '50%',
+              width: '16px',
+              height: '16px',
+              fontSize: '0.6rem',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center'
+            }} title={`${dayData.attendanceCount} attendees`}>
               {dayData.attendanceCount}
             </span>
           )}
@@ -181,96 +233,170 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
   const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   return (
-    <div className="calendar-container" aria-label="Run Schedule Calendar">
-      <div className="calendar-header">
+    <div style={{
+      backgroundColor: 'white',
+      borderRadius: '8px',
+      padding: '1.5rem',
+      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+      maxWidth: '500px'
+    }} aria-label="Run Schedule Calendar">
+      
+      <h2 style={{
+        color: '#2c3e50',
+        textAlign: 'center',
+        marginBottom: '1.5rem',
+        fontSize: '1.5rem'
+      }}>
+        📅 Run Schedule
+      </h2>
+
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '1rem'
+      }}>
         <button
-          className="nav-button"
           onClick={() => navigateMonth('prev')}
           disabled={state.isLoading}
           aria-label="Previous month"
+          style={{
+            background: '#3498db',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '0.5rem 1rem',
+            cursor: state.isLoading ? 'not-allowed' : 'pointer',
+            fontSize: '1rem'
+          }}
         >
-          ←
+          ← Prev
         </button>
-        <h2 className="month-year">
+        <h3 style={{
+          color: '#2c3e50',
+          margin: 0,
+          fontSize: '1.2rem'
+        }}>
           {monthNames[currentMonth]} {currentYear}
-        </h2>
+        </h3>
         <button
-          className="nav-button"
           onClick={() => navigateMonth('next')}
           disabled={state.isLoading}
           aria-label="Next month"
+          style={{
+            background: '#3498db',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            padding: '0.5rem 1rem',
+            cursor: state.isLoading ? 'not-allowed' : 'pointer',
+            fontSize: '1rem'
+          }}
         >
-          →
+          Next →
         </button>
       </div>
 
-      <div className="calendar-grid" role="grid" aria-labelledby="month-year">
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(7, 1fr)',
+        gap: '2px',
+        marginBottom: '1rem'
+      }} role="grid" aria-labelledby="month-year">
         {dayNames.map(dayName => (
-          <div key={dayName} className="day-header" role="columnheader">
+          <div key={dayName} style={{
+            padding: '0.5rem',
+            textAlign: 'center',
+            fontWeight: 'bold',
+            backgroundColor: '#f8f9fa',
+            color: '#495057',
+            fontSize: '0.8rem'
+          }} role="columnheader">
             {dayName}
           </div>
         ))}
         {renderCalendarDays()}
       </div>
 
-      <div className="calendar-legend">
-        <div className="legend-item">
-          <span className="legend-indicator run-day"></span>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-around',
+        marginBottom: '1rem',
+        fontSize: '0.8rem',
+        color: '#6c757d'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{
+            width: '12px',
+            height: '12px',
+            backgroundColor: '#27ae60',
+            borderRadius: '2px',
+            display: 'inline-block'
+          }}></span>
           <span>Run Day</span>
         </div>
-        <div className="legend-item">
-          <span className="legend-indicator today"></span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+          <span style={{
+            width: '12px',
+            height: '12px',
+            backgroundColor: '#e74c3c',
+            borderRadius: '2px',
+            display: 'inline-block'
+          }}></span>
           <span>Today</span>
         </div>
-        <div className="legend-item">
-          <span className="legend-indicator selected"></span>
-          <span>Selected</span>
-        </div>
       </div>
 
-      <div className="calendar-info">
-        {selectedDate && (
-          <div className="selected-date-info">
-            <h3>Selected Date: {formatDate(selectedDate)}</h3>
-            {getDayData(selectedDate) ? (
-              <p>
-                Status: {getDayData(selectedDate)?.hasRun ? 'Run Day' : 'No Run'}
-                {getDayData(selectedDate)?.attendanceCount ?
-                  ` | Attendance: ${getDayData(selectedDate)?.attendanceCount}` : ''}
-              </p>
-            ) : (
-              <p>No configuration for this date yet</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {hasChanges && (
-        <div className="calendar-actions">
-          <button
-            className="save-button"
-            onClick={saveChanges}
-            disabled={isSaving || state.isLoading}
-            aria-label="Save calendar changes"
-          >
-            {isSaving ? 'Saving...' : 'Save Changes'}
-          </button>
-          <button
-            className="reset-button"
-            onClick={resetChanges}
-            disabled={isSaving || state.isLoading}
-            aria-label="Reset calendar changes"
-          >
-            Reset
-          </button>
+      {selectedDate && (
+        <div style={{
+          backgroundColor: '#f8f9fa',
+          padding: '1rem',
+          borderRadius: '4px',
+          marginBottom: '1rem'
+        }}>
+          <h4 style={{ margin: '0 0 0.5rem 0', color: '#2c3e50' }}>
+            Selected: {formatDate(selectedDate)}
+          </h4>
+          {getDayData(selectedDate) ? (
+            <p style={{ margin: 0, color: '#495057' }}>
+              Status: {getDayData(selectedDate)?.hasRun ? '🏃 Run Day' : '❌ No Run'}
+              {getDayData(selectedDate)?.attendanceCount ?
+                ` | Attendance: ${getDayData(selectedDate)?.attendanceCount}` : ''}
+            </p>
+          ) : (
+            <p style={{ margin: 0, color: '#6c757d' }}>Click to toggle run day</p>
+          )}
         </div>
       )}
 
       {state.isLoading && (
-        <div className="loading-overlay" aria-live="polite">
-          <div className="loading-spinner">Loading...</div>
+        <div style={{
+          position: 'absolute',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(255,255,255,0.8)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          borderRadius: '8px'
+        }} aria-live="polite">
+          <div style={{ color: '#3498db', fontSize: '1rem' }}>Loading...</div>
         </div>
       )}
+
+      <div style={{
+        backgroundColor: '#d1ecf1',
+        color: '#0c5460',
+        padding: '0.75rem',
+        borderRadius: '4px',
+        border: '1px solid #bee5eb',
+        fontSize: '0.85rem',
+        textAlign: 'center'
+      }}>
+        <strong>Instructions:</strong> Click on any day to toggle it as a run day. Changes save automatically.
+      </div>
     </div>
   );
 };
