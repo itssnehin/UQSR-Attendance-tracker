@@ -5,10 +5,11 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 const QRTest: React.FC = () => {
   const [qrData, setQrData] = React.useState<string>('');
   const [sessionId, setSessionId] = React.useState<string>('test-session-123');
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
   const testQRGeneration = async () => {
     try {
-      const response = await fetch(`http://localhost:8000/api/qr/${sessionId}`);
+      const response = await fetch(`${API_URL}/api/qr/${sessionId}`);
       const data = await response.json();
       setQrData(JSON.stringify(data, null, 2));
     } catch (error) {
@@ -42,10 +43,11 @@ const RegistrationTest: React.FC = () => {
   const [result, setResult] = React.useState<string>('');
   const [runnerName, setRunnerName] = React.useState<string>('John Doe');
   const [sessionId, setSessionId] = React.useState<string>('test-session-123');
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
   const testRegistration = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/register', {
+      const response = await fetch(`${API_URL}/api/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -65,7 +67,7 @@ const RegistrationTest: React.FC = () => {
 
   const testGetTodayAttendance = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/attendance/today');
+      const response = await fetch(`${API_URL}/api/attendance/today`);
       const data = await response.json();
       setResult(JSON.stringify(data, null, 2));
     } catch (error) {
@@ -107,10 +109,11 @@ const RegistrationTest: React.FC = () => {
 const CalendarTest: React.FC = () => {
   const [calendarData, setCalendarData] = React.useState<string>('');
   const [configData, setConfigData] = React.useState<string>('');
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
   const testGetCalendar = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/calendar');
+      const response = await fetch(`${API_URL}/api/calendar`);
       const data = await response.json();
       setCalendarData(JSON.stringify(data, null, 2));
     } catch (error) {
@@ -121,7 +124,7 @@ const CalendarTest: React.FC = () => {
   const testConfigureCalendar = async () => {
     try {
       const today = new Date().toISOString().split('T')[0];
-      const response = await fetch('http://localhost:8000/api/calendar/configure', {
+      const response = await fetch(`${API_URL}/api/calendar/configure`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -140,7 +143,7 @@ const CalendarTest: React.FC = () => {
 
   const testGetTodayStatus = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/calendar/today');
+      const response = await fetch(`${API_URL}/api/calendar/today`);
       const data = await response.json();
       setConfigData(JSON.stringify(data, null, 2));
     } catch (error) {
@@ -179,10 +182,11 @@ const CalendarTest: React.FC = () => {
 // Backend health check
 const HealthCheck: React.FC = () => {
   const [healthData, setHealthData] = React.useState<string>('');
+  const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
 
   const checkHealth = async () => {
     try {
-      const response = await fetch('http://localhost:8000/health');
+      const response = await fetch(`${API_URL}/health`);
       const data = await response.json();
       setHealthData(JSON.stringify(data, null, 2));
     } catch (error) {
@@ -215,7 +219,7 @@ const TestDashboard: React.FC = () => {
         🏃‍♂️ Runner Attendance Tracker - Feature Tests
       </h1>
       <p style={{ color: '#6c757d', fontSize: '16px' }}>
-        Backend should be running on <strong>http://localhost:8000</strong>
+        Backend URL: <strong>{process.env.REACT_APP_API_URL || 'http://localhost:8000'}</strong>
       </p>
       
       <div style={{ display: 'grid', gap: '0', marginTop: '20px' }}>
