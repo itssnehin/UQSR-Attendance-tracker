@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { CalendarDay } from '../../types';
-import { useAppContext } from '../../context';
+import { useAppContext } from '../../context/AppContext';
 import apiService from '../../services/apiService';
 import { 
   getDateString, 

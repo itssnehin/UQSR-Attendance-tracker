@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import apiService from '../../services/apiService';
-import { useAppContext } from '../../context';
+import { useAppContext } from '../../context/AppContext';
 // import './QRCodeDisplay.css'; // Temporarily disabled
 
 interface QRCodeDisplayProps {

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useAppContext } from '../../context';
+import { useAppContext } from '../../context/AppContext';
 import socketService from '../../services/socketService';
 import { LoadingSpinner } from '../Loading';
 import { ErrorMessage } from '../ErrorDisplay';

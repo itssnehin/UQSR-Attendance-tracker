@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useAppContext } from '../../context';
+import { useAppContext } from '../../context/AppContext';
 import Calendar from './Calendar';
 import AttendanceCounter from './AttendanceCounter';
 import AttendanceHistory from './AttendanceHistory';

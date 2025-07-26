@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import apiService from '../../services/apiService';
-import { useAppContext } from '../../context';
+import { useAppContext } from '../../context/AppContext';
 import { useAsyncOperation } from '../../hooks';
 import { LoadingSpinner } from '../Loading';
 import { ErrorMessage } from '../ErrorDisplay';

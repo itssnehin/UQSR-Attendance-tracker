@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { useAppContext } from '../../context';
+import { useAppContext } from '../../context/AppContext';
 import { validateRunnerName, validateSessionId, sanitizeInput } from '../../utils/validationUtils';
 import apiService from '../../services/apiService';
 import { RegistrationRequest, AttendanceResponse } from '../../types';
