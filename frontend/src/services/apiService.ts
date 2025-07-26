@@ -45,6 +45,8 @@ class ApiService {
   constructor() {
     // Use production backend URL
     this.baseUrl = process.env.REACT_APP_API_URL || 'https://talented-intuition-production.up.railway.app';
+    console.log('🔧 API Service initialized with baseUrl:', this.baseUrl);
+    console.log('🔧 Environment REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
   }
 
   private async sleep(ms: number): Promise<void> {
@@ -66,6 +68,8 @@ class ApiService {
     const retryOptions = { ...this.defaultRetryOptions, ...retry };
     const url = `${this.baseUrl}${endpoint}`;
     
+    console.log(`🌐 API Request: ${fetchOptions.method || 'GET'} ${url}`);
+    
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
@@ -80,16 +84,22 @@ class ApiService {
       try {
         const response = await fetch(url, config);
         
+        console.log(`📡 Response: ${response.status} ${response.statusText} for ${url}`);
+        
         if (!response.ok) {
           const errorMessage = await this.getErrorMessage(response);
-          throw new ApiError(
+          const error = new ApiError(
             errorMessage || `HTTP error! status: ${response.status}`,
             response.status,
             response.status.toString()
           );
+          console.error(`❌ API Error:`, error);
+          throw error;
         }
 
-        return await response.json();
+        const data = await response.json();
+        console.log(`✅ API Success:`, data);
+        return data;
       } catch (error) {
         lastError = error instanceof Error ? error : new Error('Unknown error');
         
@@ -98,6 +108,8 @@ class ApiService {
           lastError = new NetworkError('Network connection failed');
         }
 
+        console.error(`❌ Request attempt ${attempt + 1} failed:`, lastError);
+
         // Don't retry on the last attempt or if retry condition is not met
         if (attempt === retryOptions.maxRetries || !retryOptions.retryCondition!(lastError)) {
           break;
@@ -105,12 +117,12 @@ class ApiService {
 
         // Calculate delay and wait before retry
         const delay = this.calculateDelay(attempt, retryOptions.baseDelay!, retryOptions.maxDelay!);
-        console.warn(`API request failed (attempt ${attempt + 1}/${retryOptions.maxRetries! + 1}), retrying in ${delay}ms:`, lastError.message);
+        console.warn(`🔄 Retrying in ${delay}ms...`);
         await this.sleep(delay);
       }
     }
 
-    console.error('API request failed after all retries:', lastError);
+    console.error('💥 API request failed after all retries:', lastError);
     throw lastError;
   }
 

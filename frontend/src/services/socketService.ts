@@ -7,6 +7,7 @@ class SocketService {
   constructor() {
     // Use production backend URL
     this.baseUrl = process.env.REACT_APP_API_URL || 'https://talented-intuition-production.up.railway.app';
+    console.log('🔌 Socket Service initialized with baseUrl:', this.baseUrl);
   }
 
   connect(): void {
