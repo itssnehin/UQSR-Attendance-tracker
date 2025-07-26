@@ -44,13 +44,37 @@ app = setup_rate_limiting_middleware(app)
 app = setup_monitoring_middleware(app)
 
 # CORS middleware configuration
-allowed_origins = os.getenv('ALLOWED_ORIGINS', '*').split(',')
+default_origins = [
+    "http://localhost:3000",
+    "http://localhost:3001", 
+    "https://srcatttrackerbeta.vercel.app",
+    "https://srcatttrackerbeta-*.vercel.app",
+    "https://*.vercel.app",
+    "https://srcatttrackerbeta-np15pmt84-itssnehins-projects.vercel.app",
+    "https://srcatttrackerbeta-ars678kvf-itssnehins-projects.vercel.app",
+    "https://srcatttrackerbeta-yhg2lz99t-itssnehins-projects.vercel.app"
+]
+
+# Get allowed origins from environment or use defaults
+env_origins = os.getenv('ALLOWED_ORIGINS', '')
+if env_origins:
+    allowed_origins = env_origins.split(',')
+else:
+    allowed_origins = default_origins
+
+# Add wildcard for development
+if os.getenv('ENVIRONMENT') != 'production':
+    allowed_origins.append('*')
+
+logger.info(f"CORS allowed origins: {allowed_origins}")
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
 
 # Custom exception handlers

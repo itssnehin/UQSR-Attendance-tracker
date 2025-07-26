@@ -16,10 +16,22 @@ class WebSocketService:
     
     def __init__(self):
         # Create Socket.IO server with CORS configuration
+        allowed_origins = [
+            "http://localhost:3000",
+            "http://localhost:3001",
+            "https://srcatttrackerbeta.vercel.app",
+            "https://srcatttrackerbeta-*.vercel.app",
+            "https://*.vercel.app",
+            "https://srcatttrackerbeta-np15pmt84-itssnehins-projects.vercel.app",
+            "https://srcatttrackerbeta-ars678kvf-itssnehins-projects.vercel.app",
+            "https://srcatttrackerbeta-yhg2lz99t-itssnehins-projects.vercel.app"
+        ]
+        
         self.sio = socketio.AsyncServer(
-            cors_allowed_origins="*",  # In production, specify exact origins
+            cors_allowed_origins=allowed_origins,
             logger=True,
-            engineio_logger=True
+            engineio_logger=True,
+            async_mode='asgi'
         )
         
         # In-memory session management
