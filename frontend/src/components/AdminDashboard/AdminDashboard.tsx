@@ -1,32 +1,6 @@
-import React, { useEffect } from 'react';
-import { useAppContext } from '../../context/AppContext';
-import Calendar from './Calendar';
-import AttendanceCounter from './AttendanceCounter';
-import AttendanceHistory from './AttendanceHistory';
-import AttendanceCode from './AttendanceCode';
-import DataExport from './DataExport';
-import apiService from '../../services/apiService';
+import React from 'react';
 
 const AdminDashboard: React.FC = () => {
-  const { state, updateAttendance, setError } = useAppContext();
-
-  // Fetch initial attendance data
-  useEffect(() => {
-    const fetchTodayAttendance = async () => {
-      try {
-        const data = await apiService.getTodayAttendance();
-        updateAttendance(data.count);
-      } catch (err) {
-        console.error('Error fetching today\'s attendance:', err);
-        setError('Failed to load today\'s attendance data');
-      }
-    };
-
-    fetchTodayAttendance();
-  }, [updateAttendance, setError]);
-
-
-
   return (
     <div style={{
       maxWidth: '1200px',
@@ -43,30 +17,15 @@ const AdminDashboard: React.FC = () => {
       </h1>
       
       <div style={{
-        display: 'grid',
-        gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))',
-        gap: '2rem'
+        backgroundColor: 'white',
+        borderRadius: '8px',
+        padding: '2rem',
+        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+        textAlign: 'center'
       }}>
-        <AttendanceCode />
-        <AttendanceCounter />
-        <Calendar />
-        <AttendanceHistory daysToShow={7} />
-        <DataExport />
+        <p>Admin Dashboard is loading...</p>
+        <p>This is a minimal version to test if the basic component works.</p>
       </div>
-
-      {state.error && (
-        <div style={{
-          backgroundColor: '#f8d7da',
-          color: '#721c24',
-          padding: '1rem',
-          borderRadius: '4px',
-          border: '1px solid #f5c6cb',
-          marginTop: '2rem',
-          textAlign: 'center'
-        }}>
-          Error: {state.error}
-        </div>
-      )}
     </div>
   );
 };
