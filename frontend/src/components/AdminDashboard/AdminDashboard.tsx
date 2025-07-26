@@ -3,6 +3,7 @@ import AttendanceCode from './AttendanceCode';
 import AttendanceCounter from './AttendanceCounter';
 import Calendar from './Calendar';
 import AttendanceHistory from './AttendanceHistory';
+import DataExport from './DataExport';
 
 const AdminDashboard: React.FC = () => {
   return (
@@ -29,6 +30,7 @@ const AdminDashboard: React.FC = () => {
         <AttendanceCounter />
         <Calendar />
         <AttendanceHistory daysToShow={7} />
+        <DataExport />
       </div>
     </div>
   );
