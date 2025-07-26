@@ -1,11 +1,11 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { CalendarDay } from '../../types';
+import { CalendarDay } from '../../types/index';
 import { useAppContext } from '../../context/AppContext';
 import apiService from '../../services/apiService';
-import { 
-  getDateString, 
-  getDaysInMonth, 
-  getFirstDayOfMonth, 
+import {
+  getDateString,
+  getDaysInMonth,
+  getFirstDayOfMonth,
   isToday,
   formatDate,
   isSameDay
@@ -58,13 +58,13 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
     setSelectedDate(date);
     const dateString = getDateString(date);
     const existingDay = localCalendar.find(day => day.date === dateString);
-    
+
     let updatedCalendar: CalendarDay[];
-    
+
     if (existingDay) {
       // Toggle existing day
       updatedCalendar = localCalendar.map(day =>
-        day.date === dateString 
+        day.date === dateString
           ? { ...day, hasRun: !day.hasRun }
           : day
       );
@@ -77,11 +77,11 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
       };
       updatedCalendar = [...localCalendar, newDay];
     }
-    
+
     setLocalCalendar(updatedCalendar);
     setHasChanges(true);
   };
-  
+
   const handleDateSelection = useCallback((date: Date) => {
     setSelectedDate(date);
   }, []);
@@ -90,11 +90,11 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
     try {
       setIsSaving(true);
       setError(null);
-      
+
       await apiService.configureCalendar(localCalendar);
       setCalendar(localCalendar);
       setHasChanges(false);
-      
+
       if (onSave) {
         onSave();
       }
@@ -128,12 +128,12 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
 
   const renderCalendarDays = () => {
     const days = [];
-    
+
     // Add empty cells for days before the first day of the month
     for (let i = 0; i < firstDayOfMonth; i++) {
       days.push(<div key={`empty-${i}`} className="calendar-day empty"></div>);
     }
-    
+
     // Add days of the month
     for (let day = 1; day <= daysInMonth; day++) {
       const date = new Date(currentYear, currentMonth, day);
@@ -141,7 +141,7 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
       const isRunDay = dayData?.hasRun || false;
       const isTodayDate = isToday(date);
       const isSelected = selectedDate && isSameDay(date, selectedDate);
-      
+
       days.push(
         <div
           key={day}
@@ -149,7 +149,7 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
           onClick={() => toggleRunDay(date)}
           title={`${formatDate(date)}${isRunDay ? ' - Run Day' : ''}`}
           aria-label={`${formatDate(date)}${isRunDay ? ' - Run Day' : ''}${isTodayDate ? ' (Today)' : ''}`}
-          aria-selected={isSelected}
+          aria-selected={isSelected || false}
           role="gridcell"
           tabIndex={0}
           onKeyDown={(e) => {
@@ -169,7 +169,7 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
         </div>
       );
     }
-    
+
     return days;
   };
 
@@ -183,7 +183,7 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
   return (
     <div className="calendar-container" aria-label="Run Schedule Calendar">
       <div className="calendar-header">
-        <button 
+        <button
           className="nav-button"
           onClick={() => navigateMonth('prev')}
           disabled={state.isLoading}
@@ -194,7 +194,7 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
         <h2 className="month-year">
           {monthNames[currentMonth]} {currentYear}
         </h2>
-        <button 
+        <button
           className="nav-button"
           onClick={() => navigateMonth('next')}
           disabled={state.isLoading}
@@ -234,8 +234,8 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
             <h3>Selected Date: {formatDate(selectedDate)}</h3>
             {getDayData(selectedDate) ? (
               <p>
-                Status: {getDayData(selectedDate)?.hasRun ? 'Run Day' : 'No Run'} 
-                {getDayData(selectedDate)?.attendanceCount ? 
+                Status: {getDayData(selectedDate)?.hasRun ? 'Run Day' : 'No Run'}
+                {getDayData(selectedDate)?.attendanceCount ?
                   ` | Attendance: ${getDayData(selectedDate)?.attendanceCount}` : ''}
               </p>
             ) : (
@@ -247,7 +247,7 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
 
       {hasChanges && (
         <div className="calendar-actions">
-          <button 
+          <button
             className="save-button"
             onClick={saveChanges}
             disabled={isSaving || state.isLoading}
@@ -255,7 +255,7 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
           >
             {isSaving ? 'Saving...' : 'Save Changes'}
           </button>
-          <button 
+          <button
             className="reset-button"
             onClick={resetChanges}
             disabled={isSaving || state.isLoading}

@@ -1,5 +1,5 @@
-import React, { createContext, useContext } from 'react';
-import { AppState, CalendarDay } from '../types';
+import { createContext, useContext } from 'react';
+import { AppState, CalendarDay } from '../types/index';
 
 export interface AppContextType {
   state: AppState;

@@ -9,7 +9,9 @@ interface QRCodeDisplayProps {
 
 const QRCodeDisplay: React.FC<QRCodeDisplayProps> = ({ refreshInterval = 300000 }) => {
   const { state } = useAppContext();
-  const { todaySessionId, todayHasRun } = state;
+  const { todayStatus } = state;
+  const todaySessionId = todayStatus?.sessionId;
+  const todayHasRun = todayStatus?.hasRun;
   
   const [qrCode, setQrCode] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);

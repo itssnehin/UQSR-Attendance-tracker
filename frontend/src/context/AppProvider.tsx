@@ -1,6 +1,6 @@
 import React, { useReducer, useEffect, ReactNode } from 'react';
 import AppContext, { AppContextType } from './AppContext';
-import { AppState, CalendarDay } from '../types';
+import { AppState, CalendarDay } from '../types/index';
 import socketService from '../services/socketService';
 
 // Action types

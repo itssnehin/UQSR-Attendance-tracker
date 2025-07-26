@@ -1,4 +1,4 @@
-import { RegistrationRequest, AttendanceResponse, CalendarDay } from '../types';
+import { RegistrationRequest, AttendanceResponse, CalendarDay } from '../types/index';
 
 interface RetryOptions {
   maxRetries?: number;
