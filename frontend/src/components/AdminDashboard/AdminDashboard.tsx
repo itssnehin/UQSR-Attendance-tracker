@@ -1,5 +1,6 @@
 import React from 'react';
 import AttendanceCode from './AttendanceCode';
+import AttendanceCounter from './AttendanceCounter';
 
 const AdminDashboard: React.FC = () => {
   return (
@@ -23,6 +24,7 @@ const AdminDashboard: React.FC = () => {
         gap: '2rem'
       }}>
         <AttendanceCode />
+        <AttendanceCounter />
       </div>
     </div>
   );
