@@ -1,6 +1,7 @@
 import React from 'react';
 import AttendanceCode from './AttendanceCode';
 import AttendanceCounter from './AttendanceCounter';
+import Calendar from './Calendar';
 
 const AdminDashboard: React.FC = () => {
   return (
@@ -25,6 +26,7 @@ const AdminDashboard: React.FC = () => {
       }}>
         <AttendanceCode />
         <AttendanceCounter />
+        <Calendar />
       </div>
     </div>
   );
