@@ -43,8 +43,16 @@ class ApiService {
   };
 
   constructor() {
-    // Use production backend URL
-    this.baseUrl = process.env.REACT_APP_API_URL || 'https://talented-intuition-production.up.railway.app';
+    // Use production backend URL - ensure HTTPS
+    let baseUrl = process.env.REACT_APP_API_URL || 'https://talented-intuition-production.up.railway.app';
+    
+    // Force HTTPS if HTTP is detected
+    if (baseUrl.startsWith('http://')) {
+      baseUrl = baseUrl.replace('http://', 'https://');
+      console.warn('⚠️ Converted HTTP to HTTPS for security:', baseUrl);
+    }
+    
+    this.baseUrl = baseUrl;
     console.log('🔧 API Service initialized with baseUrl:', this.baseUrl);
     console.log('🔧 Environment REACT_APP_API_URL:', process.env.REACT_APP_API_URL);
   }

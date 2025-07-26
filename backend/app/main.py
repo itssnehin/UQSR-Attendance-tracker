@@ -62,16 +62,15 @@ if env_origins:
 else:
     allowed_origins = default_origins
 
-# Add wildcard for development
-if os.getenv('ENVIRONMENT') != 'production':
-    allowed_origins.append('*')
+# Temporarily allow all origins for debugging
+allowed_origins = ["*"]
 
 logger.info(f"CORS allowed origins: {allowed_origins}")
 
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
-    allow_credentials=True,
+    allow_credentials=False,  # Set to False when using wildcard
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
     expose_headers=["*"]

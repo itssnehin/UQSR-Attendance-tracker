@@ -28,7 +28,7 @@ class WebSocketService:
         ]
         
         self.sio = socketio.AsyncServer(
-            cors_allowed_origins=allowed_origins,
+            cors_allowed_origins="*",  # Temporarily allow all origins
             logger=True,
             engineio_logger=True,
             async_mode='asgi'
