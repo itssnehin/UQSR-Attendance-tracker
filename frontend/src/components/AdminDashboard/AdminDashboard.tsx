@@ -26,10 +26,7 @@ const AdminDashboard: React.FC = () => {
     fetchTodayAttendance();
   }, [updateAttendance, setError]);
 
-  const handleCalendarSave = () => {
-    // Optional callback when calendar is saved
-    console.log('Calendar configuration saved successfully');
-  };
+
 
   return (
     <div className="container">
@@ -45,7 +42,7 @@ const AdminDashboard: React.FC = () => {
           <div className="card">
             <h2>Run Calendar Configuration</h2>
             <p>Click on dates to mark them as run days. Changes will be saved when you click "Save Changes".</p>
-            <Calendar onSave={handleCalendarSave} />
+            <Calendar />
           </div>
         </div>
       </div>

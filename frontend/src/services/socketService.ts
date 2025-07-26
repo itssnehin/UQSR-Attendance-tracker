@@ -5,25 +5,31 @@ class SocketService {
   private baseUrl: string;
 
   constructor() {
-    // Use window.location.origin as fallback if environment variable is not available
-    this.baseUrl = (typeof window !== 'undefined' && window.process && window.process.env && window.process.env.REACT_APP_API_URL) 
-      ? window.process.env.REACT_APP_API_URL 
-      : 'http://localhost:8000';
+    // Use production backend URL
+    this.baseUrl = process.env.REACT_APP_API_URL || 'https://talented-intuition-production.up.railway.app';
   }
 
   connect(): void {
     if (!this.socket) {
       this.socket = io(this.baseUrl, {
-        transports: ['websocket'],
+        transports: ['websocket', 'polling'], // Add polling as fallback
         autoConnect: true,
+        timeout: 10000, // 10 second timeout
+        reconnection: true,
+        reconnectionAttempts: 5,
+        reconnectionDelay: 2000,
       });
 
       this.socket.on('connect', () => {
-        console.log('Socket connected');
+        console.log('Socket connected to:', this.baseUrl);
       });
 
-      this.socket.on('disconnect', () => {
-        console.log('Socket disconnected');
+      this.socket.on('disconnect', (reason) => {
+        console.log('Socket disconnected:', reason);
+      });
+
+      this.socket.on('connect_error', (error) => {
+        console.error('Socket connection error:', error);
       });
 
       this.socket.on('error', (error) => {
@@ -56,9 +62,24 @@ class SocketService {
   }
 
   emit(event: string, data?: any): void {
-    if (this.socket) {
+    if (this.socket && this.socket.connected) {
       this.socket.emit(event, data);
     }
+  }
+
+  reconnect(): void {
+    if (this.socket) {
+      this.socket.connect();
+    } else {
+      this.connect();
+    }
+  }
+
+  getConnectionState(): string {
+    if (!this.socket) return 'not_initialized';
+    if (this.socket.connected) return 'connected';
+    if (this.socket.disconnected) return 'disconnected';
+    return 'connecting';
   }
 }
 

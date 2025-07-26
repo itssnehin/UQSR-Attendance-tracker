@@ -32,24 +32,19 @@ class NetworkError extends Error {
 class ApiService {
   private readonly baseUrl: string;
   private readonly defaultRetryOptions: RetryOptions = {
-    maxRetries: 3,
-    baseDelay: 1000,
-    maxDelay: 10000,
+    maxRetries: 1, // Reduce retries for faster response
+    baseDelay: 500, // Reduce delay
+    maxDelay: 2000, // Reduce max delay
     retryCondition: (error: Error) => {
-      // Retry on network errors and 5xx server errors
+      // Only retry on network errors, not server errors
       if (error instanceof NetworkError) return true;
-      if (error instanceof ApiError) {
-        return error.status ? error.status >= 500 : false;
-      }
       return false;
     }
   };
 
   constructor() {
-    // Use window.location.origin as fallback if environment variable is not available
-    this.baseUrl = (typeof process !== 'undefined' && process.env && process.env.REACT_APP_API_URL) 
-      ? process.env.REACT_APP_API_URL 
-      : 'http://localhost:8000';
+    // Use production backend URL
+    this.baseUrl = process.env.REACT_APP_API_URL || 'https://talented-intuition-production.up.railway.app';
   }
 
   private async sleep(ms: number): Promise<void> {

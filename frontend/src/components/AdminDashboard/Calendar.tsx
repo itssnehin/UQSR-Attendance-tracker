@@ -13,11 +13,10 @@ import {
 // import './Calendar.css'; // Temporarily disabled
 
 interface CalendarProps {
-  onSave?: () => void;
   initialMonth?: Date;
 }
 
-const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
+const Calendar: React.FC<CalendarProps> = ({ initialMonth }) => {
   const { state, setLoading, setError, setCalendar } = useAppContext();
   const [currentDate, setCurrentDate] = useState(initialMonth || new Date());
   const [localCalendar, setLocalCalendar] = useState<CalendarDay[]>([]);
@@ -77,22 +76,18 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
       updatedCalendar = [...localCalendar, updatedDay];
     }
 
-    // Update local state immediately
+    // Update local state immediately for instant feedback
     setLocalCalendar(updatedCalendar);
+    setCalendar(updatedCalendar); // Update global state immediately
 
-    // Save to backend immediately - send single day configuration
+    // Save to backend in background without blocking UI
     try {
-      setLoading(true);
       await apiService.configureRunDay(date, updatedDay.hasRun);
-      setCalendar(updatedCalendar); // Update global state
       setError(null);
     } catch (error) {
-      setError('Failed to save calendar changes');
+      // Show error but don't revert - let user try again
+      setError('Failed to save changes. Click again to retry.');
       console.error('Error saving calendar:', error);
-      // Revert local changes on error
-      setLocalCalendar(state.calendar);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -369,20 +364,18 @@ const Calendar: React.FC<CalendarProps> = ({ onSave, initialMonth }) => {
         </div>
       )}
 
-      {state.isLoading && (
+      {state.error && (
         <div style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(255,255,255,0.8)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          borderRadius: '8px'
-        }} aria-live="polite">
-          <div style={{ color: '#3498db', fontSize: '1rem' }}>Loading...</div>
+          backgroundColor: '#f8d7da',
+          color: '#721c24',
+          padding: '0.75rem',
+          borderRadius: '4px',
+          border: '1px solid #f5c6cb',
+          marginBottom: '1rem',
+          textAlign: 'center',
+          fontSize: '0.9rem'
+        }}>
+          {state.error}
         </div>
       )}
 
