@@ -21,6 +21,15 @@
 3. Select your repository: **`UQSR-Attendance-tracker`**
 
 ### Step 3: Configure Build Settings
+
+**Option 1 (Recommended)**: Use the netlify.toml file in your repo root
+```
+Base directory: (leave empty)
+Build command: (leave empty - uses netlify.toml)
+Publish directory: (leave empty - uses netlify.toml)
+```
+
+**Option 2**: Manual configuration
 ```
 Base directory: frontend
 Build command: npm run build
