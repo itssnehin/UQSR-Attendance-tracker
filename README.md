@@ -1,25 +1,45 @@
 # Runner Attendance Tracker
 
-A web-based system designed for the UQ Social Runners Club to efficiently track attendance at daily social runs. The system provides a configurable calendar for scheduling runs, quick QR code-based registration for runners, and real-time attendance reporting through a web interface.
+A web-based system designed for the UQ Social Runners Club to efficiently track attendance at daily social runs. The system provides a configurable calendar for scheduling runs, quick student number-based registration for runners, and real-time attendance reporting through a web interface.
 
-## Features
+## 🚀 Live Demo
 
-- **Calendar Management**: Configure which days have scheduled runs
-- **QR Code Registration**: Quick attendance registration via QR code scanning
-- **Real-time Updates**: Live attendance tracking with WebSocket connections
-- **Admin Dashboard**: Monitor participation and manage attendance records
-- **Data Export**: Export attendance data in CSV format
-- **Attendance Override**: Add, edit, or remove attendance records manually
-- **Historical Data**: View and analyze participation trends
+**Registration URL**: [https://uqsrc.netlify.app/](https://uqsrc.netlify.app/)
 
-## Tech Stack
+## 📱 Screenshots
+
+### Runner Registration
+![Runner Registration](runner_registered.png)
+*Students can quickly register for runs using their 8-digit student number and session ID*
+
+### Admin Dashboard - Calendar View
+![Admin Calendar](admin_1.png)
+*Admins can configure run days and view attendance counts on the calendar*
+
+### Admin Dashboard - Attendance Management
+![Admin Attendance](admin_2.png)
+*Real-time attendance tracking and management interface*
+
+## ✨ Features
+
+- **📅 Calendar Management**: Configure which days have scheduled runs
+- **🎓 Student Registration**: Quick attendance registration using 8-digit student numbers
+- **⚡ Real-time Updates**: Live attendance tracking with WebSocket connections
+- **👨‍💼 Admin Dashboard**: Monitor participation and manage attendance records
+- **📊 Data Export**: Export attendance data in CSV format
+- **✏️ Attendance Override**: Add, edit, or remove attendance records manually
+- **📈 Historical Data**: View and analyze participation trends
+- **🔒 Secure Access**: Password-protected admin interface
+- **📱 Mobile Friendly**: Responsive design for all devices
+
+## 🛠️ Tech Stack
 
 ### Backend
 - **Python 3.13** with FastAPI
-- **SQLite** database with SQLAlchemy ORM
+- **PostgreSQL** database with SQLAlchemy ORM
 - **Alembic** for database migrations
-- **JWT** tokens for secure QR code validation
 - **WebSocket** support for real-time updates
+- **Gunicorn** with multiple workers for production
 - **Pytest** for comprehensive testing
 
 ### Frontend
@@ -27,6 +47,12 @@ A web-based system designed for the UQ Social Runners Club to efficiently track 
 - **Socket.IO** client for real-time updates
 - **React Router** for navigation
 - **Responsive design** for mobile and desktop
+
+### Deployment
+- **Frontend**: Netlify (Free tier)
+- **Backend**: Railway (Pro tier - $5/month)
+- **Database**: PostgreSQL on Railway
+- **CDN**: Global content delivery via Netlify
 
 ## Project Structure
 
@@ -51,7 +77,21 @@ runner-attendance-tracker/
 └── README.md
 ```
 
-## Getting Started
+## 🏃‍♂️ Quick Start
+
+### For Users
+1. **Visit**: [https://uqsrc.netlify.app/](https://uqsrc.netlify.app/)
+2. **Enter**: Your 8-digit student number
+3. **Enter**: Session ID (provided by run organizers)
+4. **Click**: Register Attendance
+5. **Done**: You're registered for the run!
+
+### For Admins
+1. **Visit**: [https://uqsrc.netlify.app/admin](https://uqsrc.netlify.app/admin)
+2. **Login**: With admin password
+3. **Manage**: Calendar, view attendance, export data
+
+## 💻 Development Setup
 
 ### Prerequisites
 
@@ -109,12 +149,8 @@ python -m pytest tests/ -v
 - `POST /api/calendar/configure` - Update run day settings
 - `GET /api/calendar/today` - Check today's run status
 
-### QR Code System
-- `GET /api/qr/{session_id}` - Generate QR code for session
-- `GET /api/qr/validate/{token}` - Validate QR code token
-
 ### Attendance Registration
-- `POST /api/register` - Register attendance
+- `POST /api/attendance/register` - Register attendance with student number
 - `GET /api/attendance/today` - Get current day attendance
 - `GET /api/attendance/history` - Get historical attendance data
 
@@ -152,13 +188,24 @@ python -m pytest tests/ -v
 - Maintain test coverage above 90%
 - Document all public APIs
 
-## Deployment
+## 🚀 Deployment
 
-The application is designed for easy deployment on free hosting platforms:
+### Current Production Setup
+- **Frontend**: Deployed on Netlify (Free tier)
+- **Backend**: Deployed on Railway (Pro tier - $5/month)
+- **Database**: PostgreSQL on Railway
+- **Performance**: Handles 50+ concurrent users easily
 
+### Alternative Deployment Options
 - **Backend**: Railway, Render, or PythonAnywhere
 - **Frontend**: Vercel, Netlify, or GitHub Pages
-- **Database**: SQLite with persistent storage
+- **Database**: PostgreSQL, MySQL, or SQLite
+
+### Capacity
+- **Current setup**: 50-100 concurrent users
+- **Cost**: $5/month total
+- **Uptime**: 99.9%+
+- **Global CDN**: Fast loading worldwide
 
 ## Contributing
 
