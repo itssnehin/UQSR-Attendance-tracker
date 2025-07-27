@@ -10,10 +10,10 @@ restartPolicyMaxRetries = 10
 
 [variables]
 PYTHON_VERSION = "3.11"
-DATABASE_URL = "sqlite:///./data/runner_attendance.db"
 ENVIRONMENT = "production"
 LOG_LEVEL = "INFO"
 DEBUG = "false"
 QR_CODE_EXPIRY_HOURS = "24"
 CACHE_TTL = "300"
 MAX_CONCURRENT_REQUESTS = "100"
+ALLOWED_ORIGINS = "https://srcatttrackerbeta.vercel.app,https://srcatttrackerbeta-*.vercel.app,https://*.vercel.app"
