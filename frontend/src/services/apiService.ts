@@ -89,11 +89,9 @@ class ApiService {
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
-        'Cache-Control': 'no-cache, no-store, must-revalidate',
-        'Pragma': 'no-cache',
-        'Expires': '0',
         ...fetchOptions.headers,
       },
+      cache: 'no-store', // Use fetch cache option instead of headers
       ...fetchOptions,
     };
 
