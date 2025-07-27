@@ -21,7 +21,9 @@
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
     "test:e2e:headed": "playwright test --headed",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "deploy:netlify": "node deploy-netlify.js",
+    "deploy:netlify-cli": "npm run build && netlify deploy --prod --dir=build"
   },
   "eslintConfig": {
     "extends": [
