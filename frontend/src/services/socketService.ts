@@ -5,17 +5,25 @@ class SocketService {
   private baseUrl: string;
 
   constructor() {
-    // Use production backend URL - ensure HTTPS
-    let baseUrl = process.env.REACT_APP_API_URL || 'https://talented-intuition-production.up.railway.app';
+    // FORCE HTTPS - no exceptions
+    const defaultUrl = 'https://talented-intuition-production.up.railway.app';
+    let baseUrl = process.env.REACT_APP_API_URL || defaultUrl;
     
-    // Force HTTPS if HTTP is detected
+    // Aggressively force HTTPS
     if (baseUrl.startsWith('http://')) {
       baseUrl = baseUrl.replace('http://', 'https://');
       console.warn('⚠️ Converted HTTP to HTTPS for WebSocket security:', baseUrl);
     }
     
+    // Double check - if somehow it's still not HTTPS, force it
+    if (!baseUrl.startsWith('https://')) {
+      console.error('❌ Invalid WebSocket URL detected, forcing HTTPS:', baseUrl);
+      baseUrl = defaultUrl;
+    }
+    
     this.baseUrl = baseUrl;
     console.log('🔌 Socket Service initialized with baseUrl:', this.baseUrl);
+    console.log('🔌 Final WebSocket baseUrl being used:', this.baseUrl);
   }
 
   connect(): void {
