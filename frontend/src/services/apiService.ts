@@ -41,6 +41,9 @@ class ApiService {
       return false;
     }
   };
+  
+  // Request deduplication to prevent multiple simultaneous requests
+  private pendingRequests: Map<string, Promise<any>> = new Map();
 
   constructor() {
     // FORCE HTTPS - no exceptions
@@ -83,8 +86,18 @@ class ApiService {
     const { retry, ...fetchOptions } = options;
     const retryOptions = { ...this.defaultRetryOptions, ...retry };
     const url = `${this.baseUrl}${endpoint}`;
+    const method = fetchOptions.method || 'GET';
     
-    console.log(`🌐 API Request: ${fetchOptions.method || 'GET'} ${url}`);
+    // Create a unique key for request deduplication (only for GET requests)
+    const requestKey = method === 'GET' ? `${method}:${url}` : `${method}:${url}:${Date.now()}`;
+    
+    // Check if there's already a pending request for this endpoint (GET only)
+    if (method === 'GET' && this.pendingRequests.has(requestKey)) {
+      console.log(`🔄 Reusing pending request: ${method} ${url}`);
+      return this.pendingRequests.get(requestKey)!;
+    }
+    
+    console.log(`🌐 API Request: ${method} ${url}`);
     
     const config: RequestInit = {
       headers: {
@@ -96,51 +109,66 @@ class ApiService {
     };
 
     let lastError: Error = new Error('Unknown error');
+    
+    // Create the actual request promise
+    const requestPromise = (async () => {
+      for (let attempt = 0; attempt <= retryOptions.maxRetries!; attempt++) {
+        try {
+          const response = await fetch(url, config);
+          
+          console.log(`📡 Response: ${response.status} ${response.statusText} for ${url}`);
+          
+          if (!response.ok) {
+            const errorMessage = await this.getErrorMessage(response);
+            const error = new ApiError(
+              errorMessage || `HTTP error! status: ${response.status}`,
+              response.status,
+              response.status.toString()
+            );
+            console.error(`❌ API Error:`, error);
+            throw error;
+          }
 
-    for (let attempt = 0; attempt <= retryOptions.maxRetries!; attempt++) {
-      try {
-        const response = await fetch(url, config);
-        
-        console.log(`📡 Response: ${response.status} ${response.statusText} for ${url}`);
-        
-        if (!response.ok) {
-          const errorMessage = await this.getErrorMessage(response);
-          const error = new ApiError(
-            errorMessage || `HTTP error! status: ${response.status}`,
-            response.status,
-            response.status.toString()
-          );
-          console.error(`❌ API Error:`, error);
-          throw error;
+          const data = await response.json();
+          console.log(`✅ API Success:`, data);
+          return data;
+        } catch (error) {
+          lastError = error instanceof Error ? error : new Error('Unknown error');
+          
+          // Convert fetch errors to NetworkError
+          if (lastError.name === 'TypeError' && lastError.message.includes('fetch')) {
+            lastError = new NetworkError('Network connection failed');
+          }
+
+          console.error(`❌ Request attempt ${attempt + 1} failed:`, lastError);
+
+          // Don't retry on the last attempt or if retry condition is not met
+          if (attempt === retryOptions.maxRetries || !retryOptions.retryCondition!(lastError)) {
+            break;
+          }
+
+          // Calculate delay and wait before retry
+          const delay = this.calculateDelay(attempt, retryOptions.baseDelay!, retryOptions.maxDelay!);
+          console.warn(`🔄 Retrying in ${delay}ms...`);
+          await this.sleep(delay);
         }
-
-        const data = await response.json();
-        console.log(`✅ API Success:`, data);
-        return data;
-      } catch (error) {
-        lastError = error instanceof Error ? error : new Error('Unknown error');
-        
-        // Convert fetch errors to NetworkError
-        if (lastError.name === 'TypeError' && lastError.message.includes('fetch')) {
-          lastError = new NetworkError('Network connection failed');
-        }
-
-        console.error(`❌ Request attempt ${attempt + 1} failed:`, lastError);
-
-        // Don't retry on the last attempt or if retry condition is not met
-        if (attempt === retryOptions.maxRetries || !retryOptions.retryCondition!(lastError)) {
-          break;
-        }
-
-        // Calculate delay and wait before retry
-        const delay = this.calculateDelay(attempt, retryOptions.baseDelay!, retryOptions.maxDelay!);
-        console.warn(`🔄 Retrying in ${delay}ms...`);
-        await this.sleep(delay);
       }
+
+      console.error('💥 API request failed after all retries:', lastError);
+      throw lastError;
+    })();
+
+    // Store the promise for GET requests to prevent duplicates
+    if (method === 'GET') {
+      this.pendingRequests.set(requestKey, requestPromise);
+      
+      // Clean up the pending request when it completes (success or failure)
+      requestPromise.finally(() => {
+        this.pendingRequests.delete(requestKey);
+      });
     }
 
-    console.error('💥 API request failed after all retries:', lastError);
-    throw lastError;
+    return requestPromise;
   }
 
   private async getErrorMessage(response: Response): Promise<string> {
