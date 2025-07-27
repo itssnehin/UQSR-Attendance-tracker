@@ -14,8 +14,26 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-# Database configuration
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./runner_attendance.db")
+# Database configuration - prefer PostgreSQL
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+# If no DATABASE_URL is provided, try to construct PostgreSQL URL from individual components
+if not DATABASE_URL:
+    pg_user = os.getenv("PGUSER", "postgres")
+    pg_password = os.getenv("PGPASSWORD", "")
+    pg_host = os.getenv("PGHOST", "localhost")
+    pg_port = os.getenv("PGPORT", "5432")
+    pg_database = os.getenv("PGDATABASE", "railway")
+    
+    if pg_password:  # If we have PostgreSQL credentials, use them
+        DATABASE_URL = f"postgresql://{pg_user}:{pg_password}@{pg_host}:{pg_port}/{pg_database}"
+        logger.info(f"Constructed PostgreSQL URL from environment variables")
+    else:
+        # Fallback to SQLite only if no PostgreSQL credentials
+        DATABASE_URL = "sqlite:///./runner_attendance.db"
+        logger.warning("No PostgreSQL credentials found, falling back to SQLite")
+
+logger.info(f"Using database: {'PostgreSQL' if DATABASE_URL.startswith('postgresql') else 'SQLite'}")
 
 # Ensure data directory exists for SQLite in production
 if DATABASE_URL.startswith("sqlite"):
