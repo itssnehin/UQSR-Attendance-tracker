@@ -89,6 +89,9 @@ class ApiService {
     const config: RequestInit = {
       headers: {
         'Content-Type': 'application/json',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Expires': '0',
         ...fetchOptions.headers,
       },
       ...fetchOptions,
@@ -158,6 +161,8 @@ class ApiService {
 
   // Calendar endpoints
   async getCalendar(): Promise<CalendarDay[]> {
+    // Add cache-busting parameter to avoid browser cache issues
+    const cacheBuster = `?_t=${Date.now()}`;
     const response = await this.request<{
       success: boolean;
       data: Array<{
@@ -166,7 +171,7 @@ class ApiService {
         attendance_count: number;
         session_id: string;
       }>;
-    }>('/api/calendar');
+    }>(`/api/calendar${cacheBuster}`);
     
     // Transform backend response to frontend format
     return response.data.map(item => ({
@@ -227,13 +232,15 @@ class ApiService {
   }
 
   async getTodayAttendance(): Promise<{ count: number; attendees: string[] }> {
+    // Add cache-busting parameter
+    const cacheBuster = `?_t=${Date.now()}`;
     const response = await this.request<{
       success: boolean;
       count: number;
       has_run_today: boolean;
       session_id: string;
       message: string;
-    }>('/api/attendance/today');
+    }>(`/api/attendance/today${cacheBuster}`);
     
     // Transform backend response to frontend format
     return {
