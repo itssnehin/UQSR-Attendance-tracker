@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
 import { validateRunnerName, validateSessionId, sanitizeInput } from '../../utils/validationUtils';
@@ -7,12 +7,12 @@ import { RegistrationRequest, AttendanceResponse } from '../../types';
 // import './RunnerRegistration.css'; // Temporarily disabled
 
 interface FormData {
-  runnerName: string;
+  studentNumber: string;
   sessionId: string;
 }
 
 interface FormErrors {
-  runnerName?: string;
+  studentNumber?: string;
   sessionId?: string;
   general?: string;
 }
@@ -28,13 +28,13 @@ const RunnerRegistration: React.FC = () => {
   const { sessionId: urlSessionId } = useParams<{ sessionId?: string }>();
   const [searchParams] = useSearchParams();
   const { state } = useAppContext();
-  
+
   // Form state
   const [formData, setFormData] = useState<FormData>({
-    runnerName: '',
+    studentNumber: '',
     sessionId: urlSessionId || searchParams.get('session') || ''
   });
-  
+
   const [errors, setErrors] = useState<FormErrors>({});
   const [registrationState, setRegistrationState] = useState<RegistrationState>({
     isSubmitting: false,
@@ -42,12 +42,8 @@ const RunnerRegistration: React.FC = () => {
     message: '',
     currentCount: 0
   });
-  
-  // QR Scanner state
-  const [showScanner, setShowScanner] = useState(false);
-  const [cameraError, setCameraError] = useState<string>('');
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const streamRef = useRef<MediaStream | null>(null);
+
+
 
   // Initialize session ID from URL or QR scan
   useEffect(() => {
@@ -58,14 +54,7 @@ const RunnerRegistration: React.FC = () => {
     }
   }, [urlSessionId, searchParams]);
 
-  // Cleanup camera stream on unmount
-  useEffect(() => {
-    return () => {
-      if (streamRef.current) {
-        streamRef.current.getTracks().forEach(track => track.stop());
-      }
-    };
-  }, []);
+
 
   const validateSessionIdField = (sessionId: string) => {
     const validation = validateSessionId(sessionId);
@@ -78,24 +67,27 @@ const RunnerRegistration: React.FC = () => {
     }
   };
 
-  const validateRunnerNameField = (name: string) => {
-    const validation = validateRunnerName(name);
-    if (!validation.isValid) {
-      setErrors(prev => ({ ...prev, runnerName: validation.error }));
+  const validateStudentNumberField = (studentNumber: string) => {
+    // Student number validation: exactly 8 digits
+    if (!studentNumber) {
+      setErrors(prev => ({ ...prev, studentNumber: 'Student number is required' }));
       return false;
-    } else {
-      setErrors(prev => ({ ...prev, runnerName: undefined }));
-      return true;
     }
+    if (!/^\d{8}$/.test(studentNumber)) {
+      setErrors(prev => ({ ...prev, studentNumber: 'Student number must be exactly 8 digits' }));
+      return false;
+    }
+    setErrors(prev => ({ ...prev, studentNumber: undefined }));
+    return true;
   };
 
   const handleInputChange = (field: keyof FormData, value: string) => {
     const sanitizedValue = sanitizeInput(value);
     setFormData(prev => ({ ...prev, [field]: sanitizedValue }));
-    
+
     // Clear previous errors and validate
     setErrors(prev => ({ ...prev, [field]: undefined, general: undefined }));
-    
+
     if (field === 'runnerName') {
       validateRunnerNameField(sanitizedValue);
     } else if (field === 'sessionId') {
@@ -104,14 +96,14 @@ const RunnerRegistration: React.FC = () => {
   };
 
   const validateForm = (): boolean => {
-    const nameValid = validateRunnerNameField(formData.runnerName);
+    const studentNumberValid = validateStudentNumberField(formData.studentNumber);
     const sessionValid = validateSessionIdField(formData.sessionId);
-    return nameValid && sessionValid;
+    return studentNumberValid && sessionValid;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!validateForm()) {
       return;
     }
@@ -122,12 +114,12 @@ const RunnerRegistration: React.FC = () => {
     try {
       const registrationData: RegistrationRequest = {
         sessionId: formData.sessionId,
-        runnerName: formData.runnerName,
+        runnerName: formData.studentNumber, // Backend still expects runnerName field
         timestamp: new Date()
       };
 
       const response: AttendanceResponse = await apiService.registerAttendance(registrationData);
-      
+
       setRegistrationState({
         isSubmitting: false,
         isSuccess: response.success,
@@ -137,7 +129,7 @@ const RunnerRegistration: React.FC = () => {
 
       if (response.success) {
         // Clear form on success
-        setFormData(prev => ({ ...prev, runnerName: '' }));
+        setFormData(prev => ({ ...prev, studentNumber: '' }));
       }
     } catch (error) {
       console.error('Registration failed:', error);
@@ -147,9 +139,9 @@ const RunnerRegistration: React.FC = () => {
         message: 'Registration failed. Please try again.',
         currentCount: 0
       });
-      setErrors(prev => ({ 
-        ...prev, 
-        general: error instanceof Error ? error.message : 'Registration failed. Please try again.' 
+      setErrors(prev => ({
+        ...prev,
+        general: error instanceof Error ? error.message : 'Registration failed. Please try again.'
       }));
     }
   };
@@ -157,10 +149,10 @@ const RunnerRegistration: React.FC = () => {
   const startCamera = async () => {
     try {
       setCameraError('');
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         video: { facingMode: 'environment' } // Use back camera on mobile
       });
-      
+
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         streamRef.current = stream;
@@ -348,9 +340,10 @@ const RunnerRegistration: React.FC = () => {
                   onChange={(e) => handleInputChange('sessionId', e.target.value)}
                   placeholder="Enter 5-digit session code"
                   disabled={registrationState.isSubmitting}
+                  maxLength={5}
                   style={{
                     width: '100%',
-                    padding: '1rem 3.5rem 1rem 1rem',
+                    padding: '1rem',
                     border: errors.sessionId ? '2px solid #e74c3c' : '2px solid #e9ecef',
                     borderRadius: '12px',
                     outline: 'none',
@@ -375,42 +368,7 @@ const RunnerRegistration: React.FC = () => {
                     }
                   }}
                 />
-                <div style={{
-                  position: 'absolute',
-                  right: '1rem',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  display: 'flex',
-                  gap: '0.5rem'
-                }}>
-                  <button
-                    type="button"
-                    onClick={startCamera}
-                    disabled={registrationState.isSubmitting}
-                    title="Scan QR Code"
-                    style={{
-                      background: 'linear-gradient(135deg, #667eea, #764ba2)',
-                      color: 'white',
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '0.5rem',
-                      cursor: registrationState.isSubmitting ? 'not-allowed' : 'pointer',
-                      fontSize: '1.2rem',
-                      transition: 'transform 0.2s ease',
-                      opacity: registrationState.isSubmitting ? 0.5 : 1
-                    }}
-                    onMouseOver={(e) => {
-                      if (!registrationState.isSubmitting) {
-                        e.currentTarget.style.transform = 'scale(1.1)';
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      e.currentTarget.style.transform = 'scale(1)';
-                    }}
-                  >
-                    📷
-                  </button>
-                </div>
+
               </div>
               {errors.sessionId && (
                 <div style={{
@@ -427,7 +385,7 @@ const RunnerRegistration: React.FC = () => {
               )}
             </div>
 
-            {/* Runner Name Input */}
+            {/* Student Number Input */}
             <div style={{ marginBottom: '2rem' }}>
               <label style={{
                 display: 'block',
@@ -436,40 +394,49 @@ const RunnerRegistration: React.FC = () => {
                 color: '#2c3e50',
                 fontSize: '1rem'
               }}>
-                👤 Your Name
+                🎓 Student Number
               </label>
               <input
                 type="text"
-                id="runnerName"
-                value={formData.runnerName}
-                onChange={(e) => handleInputChange('runnerName', e.target.value)}
-                placeholder="Enter your full name"
+                id="studentNumber"
+                value={formData.studentNumber}
+                onChange={(e) => {
+                  // Only allow numbers and limit to 8 digits
+                  const value = e.target.value.replace(/\D/g, '').slice(0, 8);
+                  handleInputChange('studentNumber', value);
+                }}
+                placeholder="Enter your 8-digit student number"
                 disabled={registrationState.isSubmitting}
-                autoComplete="name"
+                maxLength={8}
                 style={{
                   width: '100%',
                   padding: '1rem',
                   fontSize: '1.1rem',
-                  border: errors.runnerName ? '2px solid #e74c3c' : '2px solid #e9ecef',
+                  border: errors.studentNumber ? '2px solid #e74c3c' : '2px solid #e9ecef',
                   borderRadius: '12px',
                   outline: 'none',
                   transition: 'all 0.3s ease',
-                  backgroundColor: registrationState.isSubmitting ? '#f8f9fa' : 'white'
+                  backgroundColor: registrationState.isSubmitting ? '#f8f9fa' : 'white',
+                  fontFamily: 'monospace',
+                  letterSpacing: '1px',
+                  textAlign: 'center',
+                  fontSize: '1.3rem',
+                  fontWeight: 'bold'
                 }}
                 onFocus={(e) => {
-                  if (!errors.runnerName) {
+                  if (!errors.studentNumber) {
                     e.target.style.borderColor = '#667eea';
                     e.target.style.boxShadow = '0 0 0 3px rgba(102, 126, 234, 0.1)';
                   }
                 }}
                 onBlur={(e) => {
-                  if (!errors.runnerName) {
+                  if (!errors.studentNumber) {
                     e.target.style.borderColor = '#e9ecef';
                     e.target.style.boxShadow = 'none';
                   }
                 }}
               />
-              {errors.runnerName && (
+              {errors.studentNumber && (
                 <div style={{
                   color: '#e74c3c',
                   fontSize: '0.875rem',
@@ -479,7 +446,7 @@ const RunnerRegistration: React.FC = () => {
                   gap: '0.25rem'
                 }}>
                   <span>⚠️</span>
-                  {errors.runnerName}
+                  {errors.studentNumber}
                 </div>
               )}
             </div>
@@ -505,20 +472,20 @@ const RunnerRegistration: React.FC = () => {
             {/* Submit Button */}
             <button
               type="submit"
-              disabled={registrationState.isSubmitting || !formData.runnerName || !formData.sessionId}
+              disabled={registrationState.isSubmitting || !formData.studentNumber || !formData.sessionId}
               style={{
                 width: '100%',
                 padding: '1.25rem',
                 fontSize: '1.1rem',
                 fontWeight: 'bold',
                 color: 'white',
-                background: (registrationState.isSubmitting || !formData.runnerName || !formData.sessionId) 
-                  ? 'linear-gradient(135deg, #95a5a6, #7f8c8d)' 
+                background: (registrationState.isSubmitting || !formData.runnerName || !formData.sessionId)
+                  ? 'linear-gradient(135deg, #95a5a6, #7f8c8d)'
                   : 'linear-gradient(135deg, #667eea, #764ba2)',
                 border: 'none',
                 borderRadius: '12px',
-                cursor: (registrationState.isSubmitting || !formData.runnerName || !formData.sessionId) 
-                  ? 'not-allowed' 
+                cursor: (registrationState.isSubmitting || !formData.runnerName || !formData.sessionId)
+                  ? 'not-allowed'
                   : 'pointer',
                 transition: 'all 0.3s ease',
                 position: 'relative',
@@ -526,7 +493,7 @@ const RunnerRegistration: React.FC = () => {
                 boxShadow: '0 4px 15px rgba(102, 126, 234, 0.3)'
               }}
               onMouseOver={(e) => {
-                if (!registrationState.isSubmitting && formData.runnerName && formData.sessionId) {
+                if (!registrationState.isSubmitting && formData.studentNumber && formData.sessionId) {
                   e.currentTarget.style.transform = 'translateY(-2px)';
                   e.currentTarget.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.4)';
                 }
@@ -558,39 +525,7 @@ const RunnerRegistration: React.FC = () => {
           </form>
         )}
 
-        {/* QR Scanner Modal */}
-        {showScanner && (
-          <div className="scanner-modal">
-            <div className="scanner-content">
-              <div className="scanner-header">
-                <h3>Scan QR Code</h3>
-                <button onClick={stopCamera} className="close-button">×</button>
-              </div>
-              <div className="scanner-body">
-                <video
-                  ref={videoRef}
-                  autoPlay
-                  playsInline
-                  className="scanner-video"
-                />
-                <div className="scanner-overlay">
-                  <div className="scanner-frame"></div>
-                </div>
-                <p className="scanner-instructions">
-                  Position the QR code within the frame
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
 
-        {/* Camera Error */}
-        {cameraError && (
-          <div className="error-message">
-            <span className="error-icon">⚠️</span>
-            {cameraError}
-          </div>
-        )}
 
         {/* Registration Error */}
         {!registrationState.isSuccess && registrationState.message && (

@@ -138,17 +138,7 @@ const AdminAuth: React.FC<AdminAuthProps> = ({ onAuthenticated }) => {
           </button>
         </form>
 
-        <div style={{
-          marginTop: '2rem',
-          padding: '1rem',
-          backgroundColor: '#fff3cd',
-          border: '1px solid #ffeaa7',
-          borderRadius: '4px',
-          fontSize: '0.85rem',
-          color: '#856404'
-        }}>
-          <strong>Demo Password:</strong> admin123
-        </div>
+
       </div>
     </div>
   );
