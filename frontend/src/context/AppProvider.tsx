@@ -73,7 +73,8 @@ const AppProvider: React.FC<AppProviderProps> = ({ children }) => {
         dispatch({ type: 'SET_CALENDAR', payload: calendarData });
         
         // Find today's status
-        const today = new Date().toISOString().split('T')[0];
+        const todayDate = new Date();
+        const today = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
         const todayStatus = calendarData.find(day => day.date === today);
         dispatch({ type: 'SET_TODAY_STATUS', payload: todayStatus || null });
         

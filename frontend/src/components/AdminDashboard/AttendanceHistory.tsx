@@ -16,7 +16,10 @@ const AttendanceHistory: React.FC<AttendanceHistoryProps> = ({ daysToShow = 7 })
   function getDateString(daysAgo: number): string {
     const date = new Date();
     date.setDate(date.getDate() - daysAgo);
-    return date.toISOString().split('T')[0];
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
   }
 
   // Function to fetch attendance history

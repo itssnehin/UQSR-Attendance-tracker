@@ -45,7 +45,8 @@ const DataExport: React.FC = () => {
   );
 
   const generateFilename = (start?: string, end?: string): string => {
-    const today = new Date().toISOString().split('T')[0];
+    const todayDate = new Date();
+    const today = `${todayDate.getFullYear()}-${String(todayDate.getMonth() + 1).padStart(2, '0')}-${String(todayDate.getDate()).padStart(2, '0')}`;
     
     if (start && end) {
       return `attendance_export_${start}_to_${end}.csv`;
@@ -116,8 +117,8 @@ const DataExport: React.FC = () => {
     const start = new Date();
     start.setDate(start.getDate() - days);
 
-    const startStr = start.toISOString().split('T')[0];
-    const endStr = end.toISOString().split('T')[0];
+    const startStr = `${start.getFullYear()}-${String(start.getMonth() + 1).padStart(2, '0')}-${String(start.getDate()).padStart(2, '0')}`;
+    const endStr = `${end.getFullYear()}-${String(end.getMonth() + 1).padStart(2, '0')}-${String(end.getDate()).padStart(2, '0')}`;
 
     setStartDate(startStr);
     setEndDate(endStr);

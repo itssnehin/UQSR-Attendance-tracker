@@ -229,7 +229,12 @@ class ApiService {
   }
 
   async configureRunDay(date: Date, hasRun: boolean): Promise<void> {
-    const dateString = date.toISOString().split('T')[0]; // Format as YYYY-MM-DD
+    // Use local timezone to avoid timezone conversion issues
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
+    
     return this.request<void>('/api/calendar/configure', {
       method: 'POST',
       body: JSON.stringify({

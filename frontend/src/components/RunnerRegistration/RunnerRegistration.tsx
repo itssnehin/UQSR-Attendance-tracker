@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { useAppContext } from '../../context/AppContext';
-import { validateRunnerName, validateSessionId, sanitizeInput } from '../../utils/validationUtils';
+import { validateSessionId, sanitizeInput } from '../../utils/validationUtils';
 import apiService from '../../services/apiService';
 import { RegistrationRequest, AttendanceResponse } from '../../types';
 // import './RunnerRegistration.css'; // Temporarily disabled
@@ -88,8 +88,8 @@ const RunnerRegistration: React.FC = () => {
     // Clear previous errors and validate
     setErrors(prev => ({ ...prev, [field]: undefined, general: undefined }));
 
-    if (field === 'runnerName') {
-      validateRunnerNameField(sanitizedValue);
+    if (field === 'studentNumber') {
+      validateStudentNumberField(sanitizedValue);
     } else if (field === 'sessionId') {
       validateSessionIdField(sanitizedValue);
     }
@@ -146,39 +146,7 @@ const RunnerRegistration: React.FC = () => {
     }
   };
 
-  const startCamera = async () => {
-    try {
-      setCameraError('');
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: 'environment' } // Use back camera on mobile
-      });
 
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        streamRef.current = stream;
-        setShowScanner(true);
-      }
-    } catch (error) {
-      console.error('Camera access failed:', error);
-      setCameraError('Camera access denied or not available. Please enter the session ID manually.');
-    }
-  };
-
-  const stopCamera = () => {
-    if (streamRef.current) {
-      streamRef.current.getTracks().forEach(track => track.stop());
-      streamRef.current = null;
-    }
-    setShowScanner(false);
-    setCameraError('');
-  };
-
-  const handleManualTokenInput = () => {
-    const token = prompt('Enter the QR code token or session ID:');
-    if (token) {
-      handleInputChange('sessionId', token);
-    }
-  };
 
   return (
     <div style={{
@@ -411,7 +379,6 @@ const RunnerRegistration: React.FC = () => {
                 style={{
                   width: '100%',
                   padding: '1rem',
-                  fontSize: '1.1rem',
                   border: errors.studentNumber ? '2px solid #e74c3c' : '2px solid #e9ecef',
                   borderRadius: '12px',
                   outline: 'none',
@@ -479,12 +446,12 @@ const RunnerRegistration: React.FC = () => {
                 fontSize: '1.1rem',
                 fontWeight: 'bold',
                 color: 'white',
-                background: (registrationState.isSubmitting || !formData.runnerName || !formData.sessionId)
+                background: (registrationState.isSubmitting || !formData.studentNumber || !formData.sessionId)
                   ? 'linear-gradient(135deg, #95a5a6, #7f8c8d)'
                   : 'linear-gradient(135deg, #667eea, #764ba2)',
                 border: 'none',
                 borderRadius: '12px',
-                cursor: (registrationState.isSubmitting || !formData.runnerName || !formData.sessionId)
+                cursor: (registrationState.isSubmitting || !formData.studentNumber || !formData.sessionId)
                   ? 'not-allowed'
                   : 'pointer',
                 transition: 'all 0.3s ease',
