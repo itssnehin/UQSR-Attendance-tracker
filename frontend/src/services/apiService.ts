@@ -97,7 +97,17 @@ class ApiService {
       return this.pendingRequests.get(requestKey)!;
     }
     
-    console.log(`🌐 API Request: ${method} ${url}`);
+    // AGGRESSIVE HTTPS ENFORCEMENT - check URL right before fetch
+    let finalUrl = url;
+    if (!finalUrl.startsWith('https://')) {
+      console.error('❌ Non-HTTPS URL detected, forcing HTTPS:', finalUrl);
+      finalUrl = finalUrl.replace(/^http:\/\//, 'https://');
+      if (!finalUrl.startsWith('https://')) {
+        finalUrl = `https://talented-intuition-production.up.railway.app${endpoint}`;
+      }
+    }
+    
+    console.log(`🌐 API Request: ${method} ${finalUrl}`);
     
     const config: RequestInit = {
       headers: {
@@ -114,9 +124,9 @@ class ApiService {
     const requestPromise = (async () => {
       for (let attempt = 0; attempt <= retryOptions.maxRetries!; attempt++) {
         try {
-          const response = await fetch(url, config);
+          const response = await fetch(finalUrl, config);
           
-          console.log(`📡 Response: ${response.status} ${response.statusText} for ${url}`);
+          console.log(`📡 Response: ${response.status} ${response.statusText} for ${finalUrl}`);
           
           if (!response.ok) {
             const errorMessage = await this.getErrorMessage(response);
